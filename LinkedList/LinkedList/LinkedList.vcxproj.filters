@@ -23,16 +23,10 @@
     <ClInclude Include="ListNode.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="leetcode2_大数相加.h">
+    <ClInclude Include="Solutions.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="leetcode21_合并链表.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="leetcode19_2_删除第N个节点.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="leetcode19_删除倒数第N个节点.h">
+    <ClInclude Include="TreeNode.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

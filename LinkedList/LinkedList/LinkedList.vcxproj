@@ -118,11 +118,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="leetcode19_2_删除第N个节点.h" />
-    <ClInclude Include="leetcode19_删除倒数第N个节点.h" />
-    <ClInclude Include="leetcode2_大数相加.h" />
-    <ClInclude Include="leetcode21_合并链表.h" />
     <ClInclude Include="ListNode.h" />
+    <ClInclude Include="Solutions.h" />
+    <ClInclude Include="TreeNode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

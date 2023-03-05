@@ -2,6 +2,7 @@
 #include<vector>
 #include<iostream>
 #include<string>
+#include<algorithm>
 using namespace std;
 
 // Definition for singly-linked list.
@@ -30,6 +31,16 @@ ListNode* vector2List(vector<int> v) {
 	return head;
 }
 
+int getListSize(ListNode* head) {
+	int n = 0;
+	while (head != NULL)
+	{
+		head = head->next;
+		n++;
+	}
+	return n;
+}
+
 void printList(ListNode* head, string name = string("list")) {
 	cout << name << " = ";
 	while (head!=NULL)
@@ -38,4 +49,14 @@ void printList(ListNode* head, string name = string("list")) {
 		head = head->next;
 	}
 	cout << endl;
+}
+
+void deleteList(ListNode *head) {
+	ListNode *del = head;
+	while (head!=NULL)
+	{
+		del = head;
+		head = head->next;
+		delete del;
+	}
 }
