@@ -1,5 +1,6 @@
 .vs
 Debug
+.vscode
 
 # Prerequisites
 *.d
