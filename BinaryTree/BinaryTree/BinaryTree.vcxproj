@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{A0F1F630-A99A-4BD7-B475-F2F227AAD3DA}</ProjectGuid>
-    <RootNamespace>Array</RootNamespace>
+    <ProjectGuid>{DAF6E409-9558-4FC5-AB04-405C59DA85C6}</ProjectGuid>
+    <RootNamespace>BinaryTree</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -123,11 +123,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClInclude Include="BST_Solutions.h" />
+    <ClInclude Include="Solutions.h" />
+    <ClInclude Include="TreeNode.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="array.h" />
-    <ClInclude Include="Solutions.h" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="TreeNode.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
