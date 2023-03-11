@@ -2,7 +2,38 @@
 #include<vector>
 #include<assert.h>
 #include<algorithm>
+#include<string>
 using namespace std;
+
+// 1143. 最长公共子序列
+// 定义dp[i,j], i in [0, m), j in [0, n), 表示text1[0, i]和text2[0,j]的最长公共子序列；
+// dp[i,j] = dp[i-1,j-1]+1,  if text1[i]==text2[j]
+// dp[i,j] = max(dp[i-1,j], dp[i,j-1]), if text1[i]!=text2[j]
+// dp[m-1, n-1]即为所求；
+// 若设dp[-1, j] = dp[i, -1] = 0，则可以简化计算流程; 将dp下标全部+1即能作为C++数组的下标；
+int length_longest_common_subsequence_dp(string text1, string text2) {
+    int m = text1.size(), n = text2.size();
+    if (m==0||n==0)
+    {
+        return 0;
+    }
+    
+    vector<vector<int>> dp;
+    for(int i=0;i<m+1;i++) { // 第一行全部是0
+        vector<int> temp;
+        temp.assign(n+1, 0); // 第一列全部是0
+        dp.push_back(temp);
+    }
+    for(int i=1;i<m+1;i++) {
+        for(int j=1;j<n+1;j++) {
+            if(text1[i-1]==text2[j-1])
+                dp[i][j]=dp[i-1][j-1]+1;
+            else
+                dp[i][j]=max(dp[i-1][j],dp[i][j-1]);
+        }
+    }
+    return dp[m][n];
+}
 
 // 300. 最长严格递增子序列
 // 暴力法：O(n!)
@@ -51,6 +82,18 @@ int main()
 
     nums.assign({4,10,4,3,8,9});
     cout<<length_longest_increasing_subsequence_dp(nums)<<endl;
+
+    cout<< "最长公共子序列"<<endl;
+    string text1("abcde"), text2("ace");
+    cout<<length_longest_common_subsequence_dp(text1,text2)<<endl;
+
+    text1.assign("abc");
+    text2.assign("abc");
+    cout<<length_longest_common_subsequence_dp(text1,text2)<<endl;
+    
+    text1.assign("abc");
+    text2.assign("def");
+    cout<<length_longest_common_subsequence_dp(text1,text2)<<endl;
 
     return 0;
 }
