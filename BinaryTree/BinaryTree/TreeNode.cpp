@@ -1,4 +1,6 @@
 #include"TreeNode.h"
+#include<queue>
+#include<assert.h>
 
 void printInOrderSubnet(TreeNode *r) {
 	if (r==NULL)
@@ -10,28 +12,39 @@ void printInOrderSubnet(TreeNode *r) {
 void printInOrder(TreeNode *root, string name) {
 	cout << name << " = ";
 	printInOrderSubnet(root);
+    cout<<endl;
 }
 
 // 构造二叉树，拓展层次序：[1, -1, 2, 3] 
-TreeNode *build_from_array(int *a, int n) {
-	if (n == 0 || *a < 0)
-		return NULL;
-
-	TreeNode *r = new TreeNode(*a);
-	if (n > 1)
-		r->left = build_from_array(a + 1, n - 1);
-	if (n > 2)
-		r->right = build_from_array(a + 2, n - 2);
-	return r;
-}
-TreeNode *vectorInt2BinaryTree(vector<int> nums) {
+TreeNode *vectorIntLayerOrder2BinaryTree(vector<int> nums) {
 	int n = nums.size();
 	if (n == 0)
 		return NULL;
 
-	// 递归构建
-	return build_from_array(nums.data(), n);
+	// BFS构建
+	int i = 0;
+	queue<TreeNode*> s; // 先进先出
+	TreeNode* root = new TreeNode(nums[0]);
+    s.push(root);
+	i++;
+	while(i<n && !s.empty()) {
+		TreeNode* temp = s.front();
+		s.pop();
+
+		if(nums[i]!=-1) {
+			temp->left = new TreeNode(nums[i]);
+			s.push(temp->left);
+		}
+		i++;
+		if(i<n && nums[i]!=-1) {
+			temp->right = new TreeNode(nums[i]);
+			s.push(temp->right);
+		}
+		i++;
+	}
+    return root;
 }
+
 
 // 二叉树遍历有前、中、后(前中后是说root的位置在前中后)和层次序；单一一种遍历序列都不能唯一确定一棵树；
 // 中序和其他任何一种遍历的组合都可唯一确定一棵树；其中中序和层次序的组合稍微复杂点，其他简单；

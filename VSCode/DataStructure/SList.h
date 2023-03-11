@@ -5,10 +5,10 @@
 using namespace std;
 
 struct SingleLinkedNode {
-    int value;
+    int val;
     SingleLinkedNode* next;
-    SingleLinkedNode(): value(0), next(nullptr) {}
-    SingleLinkedNode(int _value): value(_value), next(nullptr) {}
+    SingleLinkedNode(): val(0), next(nullptr) {}
+    SingleLinkedNode(int _val): val(_val), next(nullptr) {}
 };
 
 class SList
@@ -53,7 +53,7 @@ public:
         SingleLinkedNode* p = head->next;
         while (p!=NULL)
         {
-            cout<<p->value<<" ";
+            cout<<p->val<<" ";
             p=p->next;
         }
         cout<<endl;
