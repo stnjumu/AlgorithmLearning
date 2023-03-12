@@ -8,6 +8,7 @@ using namespace std;
 /*
     LeetCode常用的单链表节点定义；
     我提供了一些常用单链表基本函数；
+	快慢指针判断链表是否有环的算法称为：Floyd判圈法，又称龟兔赛跑算法
 */
 
 struct ListNode {

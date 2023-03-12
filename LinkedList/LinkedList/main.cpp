@@ -128,7 +128,7 @@ void solveProblem(int id) {
 	}
 	else
 	{
-		cout << "�޷����������id: " << id << endl;
+		cout << "Not supported id: " << id << endl;
 	}
 
 	system("pause");
