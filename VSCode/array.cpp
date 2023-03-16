@@ -216,6 +216,86 @@ vector<double> dicesProbability2(int n) {
     return dp_old;
 }
 
+// 121. 买卖股票的最佳时机
+// 历史最低
+int maxProfit(vector<int>& prices) {
+    int history_min = prices[0];
+    int max = 0;
+    for(int i = 1; i<prices.size(); i++) {
+        int profit = prices[i]-history_min;
+        if(profit>max) {
+            max = profit;
+        }
+        if(prices[i]<history_min) {
+            history_min=prices[i];
+        }
+    }
+    return max;
+}
+// 122. 买卖股票的最佳时机 II
+// 可以买卖多次，最多同时持有一股股票；注意：同一天买了又卖或者卖了又买不会获得更高的收益；
+// 思路1：带状态的dp问题；
+// dp[n, 0], n从0开始，表示在第n+1天不持有股票时，前n+1天的最大利润；
+// dp[n, 1]，n从0开始，表示在第n+1天持有股票，前n+1天的最大利润；
+// dp[0, 0] = 0, dp[0, 1] = -prices[0];
+/*  dp[n, 0] = max_j(dp[j, 0], dp[j,1]+prices), j<i, // 由于dp[i, 0]和dp[i, 1]随i递增，只需看前一天即可；
+             = max(dp[n-1, 1] + prices[n],  // 前一天持有股票，今天卖了；
+                 dp[n-1, 0]) // 前一天不持有股票，今天不买；
+    dp[n, 1] = max(dp[n-1, 0] - prices[n],  // 前一天没有持有，今天买
+                 dp[n-1, 1]) // 前一天持有，今天不变
+    dp[n, 1]是强制在这一天持有最好的股票，为了之后有一天能卖出赚一笔；
+*/ 
+// ans = dp[n, 0]
+int maxProfit2(vector<int>& prices) {
+    // 优化了dp空间
+    if(prices.size()<=1) {
+        return 0;
+    }
+    int dp0=0, dp1=-prices[0];
+
+    int i = 1;
+    while(i<prices.size()) {
+        dp0 = max(dp1+prices[i], dp0);
+        dp1 = max(dp0-prices[i], dp1);
+        i++;
+    }
+    return dp0;
+}
+// TODO: 思路2：贪心法
+// 利用第一天买，第二天卖又第二天卖，再第三天卖等价于第一天卖再第三天卖这种性质；
+// 可以将任何一种买卖股票的决策：第i天买第j天卖(i卖j卖)，等价地用i买i+1卖、i+1买i+2卖、... 、j-1买j卖的相邻prices元素差分形式
+// 可以证明，只需选择所有相邻差分大于0的差分项，即可保证得到最优解；
+
+// 123. 买卖股票的最佳时机 III
+// 最多买卖2次；最多同时持有一股股票；
+// 不能再用贪心法，只能用dp，拓展更多状态即可；
+// dp[i, 0]表示未持有; dp[i, 1]表示第一次持有，dp[i, 2]第一次卖出，dp[i, 3]第二次持有，dp[i,4]第二次卖出;
+// 递推过程中保持dp[i, j]随i的递增性，可只考虑前一天的最优解；(最优子结构性质)
+// dp[i, 0] = 0, 不需记录
+// dp[i, 1] = max(dp[i-1, 1], -prices[i]), 第一次持有的最大收益；
+// dp[i, 2] = max(dp[i-1, 2], dp[i-1,1]+prices[2])
+// dp[i, 3] = max(dp[i-1, 3], dp[i-1,2]-prices[3])
+// dp[i, 4] = max(dp[i-1, 4], dp[i-1,3]+prices[4])
+// 初始值: dp[i, 1] = -prices[i], dp[i, 2] = 0, dp[i, 3] = -prices, dp[i, 4]=0;
+// 最后ret max(dp[n-1, 2], dp[n-1, 4])
+int maxProfit3(vector<int>& prices) {
+    if(prices.size()<=1)
+        return 0;
+    int dp1=-prices[0], dp2 = 0, dp3=-prices[0], dp4=0;
+    for(int i=1;i<prices.size();i++) {
+        // 不是上个问题中的循环依赖，而是顺序依赖了；
+        dp4=max(dp4, dp3+prices[i]);
+        dp3=max(dp3, dp2-prices[i]);
+        dp2=max(dp2, dp1+prices[i]);
+        dp1=max(dp1, -prices[i]);
+    }
+    return max(dp4, dp2);
+}
+
+// TODO: https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/solution/zui-jia-mai-mai-gu-piao-shi-ji-han-leng-dong-qi-4/
+// 309. 最佳买卖股票时机含冷冻期
+// 带状态的dp问题
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -241,6 +321,36 @@ int main()
     printVector(dicesProbability(1));
     printVector(dicesProbability(2));
     printVector(dicesProbability2(2));
+
+    cout<< "买卖股票的最佳时机"<<endl;
+    vector<int> prices{7,1,5,3,6,4};
+    cout<< maxProfit(prices)<<endl; // 5
+
+    prices.assign({7,6,4,3,1});
+    cout<< maxProfit(prices)<<endl; // 0
+
+    cout<< "买卖股票的最佳时机 II"<<endl;
+    prices.assign({7,1,5,3,6,4});
+    cout<< maxProfit2(prices)<<endl; // 7
+
+    prices.assign({1,2,3,4,5});
+    cout<< maxProfit2(prices)<<endl; // 4
+
+    prices.assign({7,6,4,3,1});
+    cout<< maxProfit2(prices)<<endl;  // 0
+
+    cout<< "买卖股票的最佳时机 III"<<endl;
+    prices.assign({3,3,5,0,0,3,1,4});
+    cout<< maxProfit3(prices)<<endl; // 6
+
+    prices.assign({1,2,3,4,5});
+    cout<< maxProfit3(prices)<<endl; // 4
+
+    prices.assign({7,6,4,3,1});
+    cout<< maxProfit3(prices)<<endl; // 0
+
+    prices.assign({1});
+    cout<< maxProfit3(prices)<<endl; // 0
 
     return 0;
 }
