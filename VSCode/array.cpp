@@ -5,7 +5,8 @@
 #include<string>
 using namespace std;
 
-void printVector(vector<int> nums, string name = "vector") {
+template<class T>
+void printVector(vector<T> nums, string name = "vector") {
     cout<<name<<" = ";
     for(auto n:nums)
         cout<<n<<" ";
@@ -150,6 +151,71 @@ vector<int> spiralOrder2(vector<vector<int>>& matrix) {
 
     }
 
+// 剑指 Offer 60. n个骰子的点数
+// dp[n, i]表示n个骰子的第i个点数的概率；
+// dp[1, i] = 1/6
+// dp[n, i] = sum_j(dp[n-1, i-j] * dp[1, j]) j in [1, 6] and dp[n-1, i-j]有意义； 
+vector<double> dicesProbability(int n) {
+    vector<double> dp_old;
+    vector<double> dp0;
+    dp0.assign(6,1.0/6.0);
+    if(n == 1) {
+        return dp0;
+    }
+
+    int i=2;
+    dp_old.assign(dp0.begin(), dp0.end());
+    while(i<=n) {
+        vector<double> dp_new;
+        int new_max = i * 6, new_min = i * 1;
+        int old_max = new_max-6, old_min = new_min-1;
+        for(int j = new_min; j<=new_max; j++) {
+            // 求dp[i, j]
+            double p=0.;
+            for(int k= 1; k<=6; k++) {
+                if(j-k>=old_min && j-k<=old_max)
+                {
+                    p+= dp_old[j-k-old_min] * dp0[k-1]; // dp0的min=1, max=6
+                }
+            }
+            dp_new.push_back(p);
+        }
+        assert(dp_new.size()==new_max-new_min+1);
+        dp_old.assign(dp_new.begin(), dp_new.end());
+        i++;
+    }
+    return dp_old;
+}
+vector<double> dicesProbability2(int n) {
+    vector<double> dp_old;
+    dp_old.assign(6,1.0/6.0);
+    if(n == 1) {
+        return dp_old;
+    }
+
+    int i=2;
+    while(i<=n) {
+        vector<double> dp_new;
+        int new_max = i * 6, new_min = i * 1;
+        int old_max = new_max-6, old_min = new_min-1;
+        for(int j = new_min; j<=new_max; j++) {
+            // 求dp[i, j]
+            double p=0.;
+            for(int k= 1; k<=6; k++) {
+                if(j-k>=old_min && j-k<=old_max)
+                {
+                    p+= dp_old[j-k-old_min] * (1.0/6.0); // dp0的min=1, max=6
+                }
+            }
+            dp_new.push_back(p);
+        }
+        // assert(dp_new.size()==new_max-new_min+1);
+        dp_old.assign(dp_new.begin(), dp_new.end());
+        i++;
+    }
+    return dp_old;
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -170,6 +236,11 @@ int main()
 
     matrix.assign({{7},{9},{6}});
     printVector(spiralOrder(matrix));
+
+    cout<< "n个骰子的点数"<<endl;
+    printVector(dicesProbability(1));
+    printVector(dicesProbability(2));
+    printVector(dicesProbability2(2));
 
     return 0;
 }
