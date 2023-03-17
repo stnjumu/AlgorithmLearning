@@ -219,6 +219,8 @@ vector<double> dicesProbability2(int n) {
 // 121. 买卖股票的最佳时机
 // 历史最低
 int maxProfit(vector<int>& prices) {
+    if(prices.size()<=1)
+        return 0;
     int history_min = prices[0];
     int max = 0;
     for(int i = 1; i<prices.size(); i++) {
@@ -292,9 +294,76 @@ int maxProfit3(vector<int>& prices) {
     return max(dp4, dp2);
 }
 
-// TODO: https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/solution/zui-jia-mai-mai-gu-piao-shi-ji-han-leng-dong-qi-4/
+// 188. 买卖股票的最佳时机 IV
+// 上题的2次改成k次, 只需找规律即可；
+int maxProfit4(int k, vector<int>& prices) {
+    if(prices.size()<=1)
+        return 0;
+    vector<int> dp;
+    for(int i=0;i<k;i++) {
+        dp.push_back(-prices[0]); // 第i次持有
+        dp.push_back(0); // 第i次卖出
+    }
+    for(int i=1;i<prices.size();i++) {
+        for(int j=dp.size()-1;j>=0;j--) {
+            if(j%2==1)
+                dp[j] = max(dp[j], dp[j-1]+prices[i]);
+            else {
+                if(j==0)
+                    dp[j] = max(dp[j], -prices[i]);
+                else
+                    dp[j] = max(dp[j], dp[j-1]-prices[i]);
+            }
+        }
+    }
+    return *max_element(dp.begin(), dp.end());
+}
+
 // 309. 最佳买卖股票时机含冷冻期
+// 不限制最大交易次数，但每次卖出的第二天无法买入；
 // 带状态的dp问题
+// dp[i, 0]表示不持有股票，买卖到prices[i]这一项的最大利润
+// dp[i, 1]表示持有股票
+// dp[i, 2]表示冷冻期，无法购买；
+// dp[i, 0] = max(dp[i-1, 0], dp[i-2, 0], ..., dp[0, 0], dp[i-1, 2]) 
+//            max(dp[i-1, 0], dp[i-1, 2]) // 单调性 
+// dp[i, 1] = max(dp[i-1, 1], dp[i-2, 1], ..., dp[0, 1], dp[i-1, 0]-prices[i])
+//          = max(dp[i-1, 1], dp[i-1, 0]-prices[i]) // 单调性
+// dp[i, 2] = dp[i-1, 1]+prices[i] // 只有由dp[i-1,1]才能到达此状态；
+// dp[i, 2]不需记录，最后只需比较下dp[n-1, 2]和dp[n-1, 0]即可；
+int maxProfit5(vector<int>& prices) {
+    if(prices.size()<=1) {
+        return 0;
+    }
+    int dp0=0, dp1=-prices[0], dp2=0;
+
+    int i = 1;
+    while(i<prices.size()) {
+        int dp2_last = dp2;
+        dp2 = dp1+prices[i]; // dp2依赖上一个dp1
+        dp1 = max(dp0-prices[i], dp1); // dp1依赖上一个dp0
+        dp0 = max(dp2_last, dp0); // dp0依赖上一个dp2, 刚好形成一个环，需要temp记录下上一个dp2
+        i++;
+    }
+    return max(dp0,dp2);
+}
+
+// 714. 买卖股票的最佳时机含手续费
+// 可以买卖无限次，但每次卖出都需要交手续费；
+int maxProfit6(vector<int>& prices, int fee) {
+    if(prices.size()<=1) {
+        return 0;
+    }
+    int dp0=0, dp1=-prices[0];
+
+    int i = 1;
+    while(i<prices.size()) {
+        dp0 = max(dp1+prices[i]-fee, dp0);
+        dp1 = max(dp0-prices[i], dp1);
+        i++;
+    }
+    return dp0;
+}
 
 int main()
 {
@@ -351,6 +420,27 @@ int main()
 
     prices.assign({1});
     cout<< maxProfit3(prices)<<endl; // 0
+
+    cout<< "买卖股票的最佳时机 IV"<<endl;
+    prices.assign({2,4,1});
+    cout<< maxProfit4(2,prices)<<endl; // 2
+
+    prices.assign({3,2,6,5,0,3});
+    cout<< maxProfit4(2,prices)<<endl; // 7
+
+    cout<< "最佳买卖股票时机含冷冻期"<<endl;
+    prices.assign({1,2,3,0,2});
+    cout<< maxProfit5(prices)<<endl; // 3
+
+    prices.assign({1});
+    cout<< maxProfit5(prices)<<endl; // 0
+
+    cout<< "买卖股票的最佳时机含手续费"<<endl;
+    prices.assign({1, 3, 2, 8, 4, 9});
+    cout<< maxProfit6(prices, 2)<<endl; // 8
+
+    prices.assign({1,3,7,5,10,3});
+    cout<< maxProfit6(prices,3)<<endl; // 6
 
     return 0;
 }
