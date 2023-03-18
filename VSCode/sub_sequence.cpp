@@ -1,8 +1,10 @@
+#include"DataStructure/array.h"
 #include<iostream>
 #include<vector>
 #include<assert.h>
 #include<algorithm>
 #include<string>
+#include<unordered_set>
 using namespace std;
 
 // 1143. 最长公共子序列
@@ -68,6 +70,38 @@ int length_longest_increasing_subsequence_dp(vector<int>& nums) {
     return *max_element(dp.begin(), dp.end());
 }
 
+
+void back_trace(vector<vector<int>> &ans, vector<int> &nums, int start, vector<int> &ascent) {
+    if(start>=nums.size()){
+        return;
+    }
+    
+    unordered_set<int> searched_num;
+    
+    for(int i=start;i<nums.size();i++) {
+        if(searched_num.find(nums[i])==searched_num.end()) {
+            searched_num.insert(nums[i]);
+            if(ascent.empty() || nums[i]>=ascent.back()) {
+                ascent.push_back(nums[i]);
+                if(ascent.size()>=2)
+                    ans.push_back(ascent); // 一个递增子序列；
+                back_trace(ans, nums, i+1, ascent);
+                ascent.pop_back();
+            }
+        }
+    }
+}
+// 491. 递增子序列
+// ! 求所有不重复的递增子序列，由于要记录每个序列，而每个位置都可以做为子序列开始，每个位置都要考虑选或不选，具有明显的后效性，非dp问题；
+// ! 如果只是求最长递增子序列，长度是没有后效性的，而这个问题也具有最优子结构性质，所以可以用dp;
+// 经典的回溯法例题，和之前做过的交换法求所有子排列的问题的思路完全相同，见full_permutation.cpp；
+vector<vector<int>> findSubsequences(vector<int>& nums) {
+    vector<vector<int>> ans;
+    vector<int> ascent;
+    back_trace(ans, nums, 0, ascent);
+    return ans;
+}
+
 int main()
 {
     cout<< "最长严格递增子序列"<<endl;
@@ -94,6 +128,13 @@ int main()
     text1.assign("abc");
     text2.assign("def");
     cout<<length_longest_common_subsequence_dp(text1,text2)<<endl;
+
+    cout<< "递增子序列"<<endl;
+    nums.assign({4,6,7,7});
+    printVectorVector(findSubsequences(nums));
+
+    nums.assign({4,4,3,2,1});
+    printVectorVector(findSubsequences(nums));
 
     return 0;
 }

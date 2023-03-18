@@ -1,17 +1,13 @@
+#include"DataStructure/array.h"
 #include<iostream>
 #include<vector>
 #include<assert.h>
 #include<algorithm>
 #include<string>
+#include<unordered_set>
 using namespace std;
 
-template<class T>
-void printVector(vector<T> nums, string name = "vector") {
-    cout<<name<<" = ";
-    for(auto n:nums)
-        cout<<n<<" ";
-    cout<<endl;
-}
+
 // 42. 接雨水
 
 // 思路3：单调栈
@@ -364,6 +360,7 @@ int maxProfit6(vector<int>& prices, int fee) {
     }
     return dp0;
 }
+
 
 int main()
 {
