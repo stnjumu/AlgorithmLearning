@@ -1,4 +1,4 @@
-#include"DataStructure/array.h"
+#include"DataStructure/Array.h"
 #include<iostream>
 #include<vector>
 #include<assert.h>
