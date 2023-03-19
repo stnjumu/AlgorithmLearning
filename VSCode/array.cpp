@@ -361,8 +361,75 @@ int maxProfit6(vector<int>& prices, int fee) {
     return dp0;
 }
 
-// 401. 二进制手表
+// 1863. 找出所有子集的异或总和再求和
+// ! 回溯问题，每个元素可以选或不选；O(2^n)
+// ? 还可以每层迭代选一个做为start，分析的话很可能得到上界O(n!)，但实际上还是每个元素选/不选，仍然是O(2^n)
+void back_trace_XOR(vector<int> &nums, int start, int xor_sum, int &ans) {
+    if(start >= nums.size()) {
+        ans += xor_sum;
+        return;
+    }
+    // 选
+    back_trace_XOR(nums, start+1, xor_sum ^ nums[start], ans); // 用int xor_sum的话回溯时不需要再异或一次
+    // 不选
+    back_trace_XOR(nums, start+1, xor_sum, ans);
+}
+int subsetXORSum(vector<int> &nums) {
+    if(nums.size()==0)
+        return 0;
+    int ans=0;
+    back_trace_XOR(nums, 0, 0, ans);
+    return ans;
+}
 
+bool make(vector<int> &materials, vector<int> cookbook) {
+    assert(materials.size()==cookbook.size());
+    // 可以做就做；并return true; 否则return false;
+    bool greaterE = true; // ! 比较得自己写，不能用materials >= cookbook, 这个只比较字典序，不是每个元素都比较，只需前面有一个>=就返回true了；
+    // 反例见此题的样例3；
+    for(int i=0;i<materials.size();i++) {
+        if(materials[i]<cookbook[i]) {
+            greaterE=false;
+            break;
+        }
+    }
+    if(greaterE) {
+        for(int i=0;i<materials.size();i++) {
+            materials[i]-=cookbook[i];
+        }
+        return true;
+    }
+    return false;
+}
+void takeApart(vector<int> &materials, vector<int> cookbook) {
+    assert(materials.size()==cookbook.size());
+    for(int i=0;i<materials.size();i++) {
+        materials[i]+=cookbook[i];
+    }
+}
+void back_trace_make(vector<int>& materials, vector<vector<int>>& cookbooks, vector<vector<int>>& attribute, int limit, int start, int beauty, int &ans) {
+    // start: 当前需要判断是否要制作的菜，ans即结果；
+    if(start>=cookbooks.size()) {
+        if(limit<=0) {
+            ans = max(ans,beauty);
+        }
+        return;
+    }
+    // 做cook start
+    if(make(materials, cookbooks[start])) {
+        back_trace_make(materials, cookbooks, attribute, limit-attribute[start][1], start+1, beauty+attribute[start][0], ans);
+        takeApart(materials, cookbooks[start]);
+    }
+    // 不做cook start
+    back_trace_make(materials, cookbooks, attribute, limit, start+1, beauty, ans);
+}
+// LCP 51. 烹饪料理
+// 由于每种料理只能制作一次，所以就是简单的二叉树遍历空间O(2^n)
+int perfectMenu(vector<int>& materials, vector<vector<int>>& cookbooks, vector<vector<int>>& attribute, int limit) {
+    int ans=-1;
+    back_trace_make(materials, cookbooks, attribute, limit, 0, 0, ans);
+    return ans;
+}
 
 int main()
 {
@@ -440,6 +507,32 @@ int main()
 
     prices.assign({1,3,7,5,10,3});
     cout<< maxProfit6(prices,3)<<endl; // 6
+
+    cout<< "找出所有子集的异或总和再求和" << endl;
+    vector<int> nums{1,3};
+    cout<< subsetXORSum(nums)<<endl;
+
+    nums.assign({5,1,6});
+    cout<< subsetXORSum(nums)<<endl;
+
+    nums.assign({3,4,5,6,7,8});
+    cout<< subsetXORSum(nums)<<endl;
+
+    cout<< "烹饪料理" <<endl;
+    vector<int> materials{10,10,10,10,10};
+    vector<vector<int>> cookbooks{{1,1,1,1,1},{3,3,3,3,3},{10,10,10,10,10}};
+    vector<vector<int>> attribute{{5,5},{6,6},{10,10}}; 
+    cout<< perfectMenu(materials, cookbooks, attribute, 5)<<endl; // 11
+
+    materials.assign({3,2,4,1,2});
+    cookbooks.assign({{1,1,0,1,2},{2,1,4,0,0},{3,2,4,1,0}});
+    attribute.assign({{3,2},{2,4},{7,6}});
+    cout<< perfectMenu(materials, cookbooks, attribute, 1)<<endl; // 7
+
+    materials.assign({17,20,10,13,8});
+    cookbooks.assign({{0,13,4,0,0},{17,13,9,2,3},{3,13,12,14,18},{19,13,5,3,6},{14,4,12,3,5}});
+    attribute.assign({{13,10},{18,5},{4,8},{4,2},{17,19}});
+    cout<< perfectMenu(materials, cookbooks, attribute, 5)<<endl; // 18
 
     return 0;
 }
