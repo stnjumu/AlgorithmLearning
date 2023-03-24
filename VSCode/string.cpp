@@ -1,6 +1,7 @@
 #include"DataStructure/String.h"
 #include<vector>
 #include<iomanip>
+#include<unordered_map>
 using namespace std;
 
 void back_trace_binary_watch(int turnedOn, int start, vector<int> &hours, vector<int> &minutes, vector<string> &ans) {
@@ -58,6 +59,45 @@ vector<string> readBinaryWatch(int turnedOn) {
     return ans; // 一定记得ret；
 }
 
+// 3. 无重复字符的最长字串
+int lengthOfLongestSubstring(string s) {
+    int n=s.length();
+    if(n<=1)
+        return n;
+    
+    int ans = 0;
+    unordered_map<char, int> char_index;
+    int i=0;
+    int start=0; // 当前最长字串的left
+    int count=0; // right = left + count
+    while(i<n) {
+        char c = s[i];
+        if(char_index.find(c)==char_index.end()) {
+            // 没找到重复的
+            count++;
+            char_index[c]=i;
+        }
+        else {
+            // 找到;
+            if(ans<count)
+                ans=count;
+            // 更新start和char_index
+            for(int j = start;j<char_index[c];j++) {
+                char_index.erase(s[j]);
+            }
+            start = char_index[c]+1;
+            count = i-start+1;
+            char_index[c]=i;
+        }
+        i++;
+    }
+    // ! 最后一个值也需要考察；一定要思考开始条件和终止条件；
+    if(ans<count)
+        ans = count;
+
+    return ans;
+}
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；
@@ -103,4 +143,9 @@ int main() {
     cout<< "二进制手表"<<endl;
     printVectorString(readBinaryWatch(1));
     printVectorString(readBinaryWatch(9));
+
+    cout<<"无重复字符的最长子串"<<endl;
+    cout<<lengthOfLongestSubstring("abcabcbb")<<endl;
+    cout<<lengthOfLongestSubstring("bbbbb")<<endl;
+    cout<<lengthOfLongestSubstring("pwwkew")<<endl;
 }

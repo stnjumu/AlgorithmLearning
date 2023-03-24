@@ -5,6 +5,8 @@
 #include<algorithm>
 #include<string>
 #include<unordered_set>
+#include<cmath>
+// abs() in cmath.
 using namespace std;
 
 
@@ -431,6 +433,97 @@ int perfectMenu(vector<int>& materials, vector<vector<int>>& cookbooks, vector<v
     return ans;
 }
 
+// 51. N皇后
+bool canPlace(vector<int> place, int start, int j) {
+    for(int i=0;i<start;i++) {
+        assert(place[i]!=-1);
+        if(place[i]==j || abs(j-place[i]) == abs(start-i))
+            return false;
+    }
+    return true;
+}
+void back_trace_NQueens(int n, int start, vector<int> &place, vector<vector<string>> &ans) {
+    if(start>=n) {
+        // new_ans的可变成全局变量；加快速度；
+        vector<string> new_ans;
+        string row;
+        row.assign(n,'.');
+        new_ans.assign(n, row);
+        for(int i=0;i<n;i++) {
+            new_ans[i][place[i]]='Q';
+        }
+        ans.push_back(new_ans);
+    }
+    
+    for(int j=0;j<n;j++) {
+        if(canPlace(place, start, j)) {
+            place[start]=j;
+            back_trace_NQueens(n, start+1, place, ans);
+            // 回溯
+            place[start]=-1;
+        }
+    }
+}
+vector<vector<string>> solveNQueens(int n) {
+    vector<int> place; // place[i] = j表示第i行皇后放在第j个位置；
+    place.assign(n,-1);
+    vector<vector<string>> ans;
+
+    back_trace_NQueens(n, 0, place, ans);
+    return ans;
+}
+
+// 52. N皇后 II
+void back_trace_NQueens_II(int n, int start, vector<int> &place, int &ans) {
+    if(start>=n) {
+        ans+=1;
+    }
+
+    for(int j=0;j<n;j++) {
+        if(canPlace(place, start, j)) {
+            place[start]=j;
+            back_trace_NQueens_II(n, start+1, place, ans);
+            // 回溯
+            place[start]=-1;
+        }
+    }
+}
+int totalNQueens(int n) {
+    int ans=0;
+    vector<int> place;
+    place.assign(n,-1);
+    back_trace_NQueens_II(n,0,place,ans);
+    return ans;
+}
+
+// 4. 寻找两个正序数组的中位数
+// 要求O(log(m+n)), 则必须用二分法了；
+// TODO: https://leetcode.cn/problems/median-of-two-sorted-arrays/
+// 思路1：转换成求第k=(m+n)/2小的数，每次比较两个数组第k/2个数，可以确定其中k/2个数一定不是中位数
+//      然后去掉这些数，就转换成找第k/2小的数；每次去掉一半，O(log(m+n))
+// 思路2：分块法，取left = 数组1前i项，数组2前j项，保证i+j=(m+n)/2，其他数为right; 
+// 保证len(left)<=len(right)且相差最多是1，之后探索刚好max(left)<min(right)的情况，即找到了解。
+// O(log(min(m, n)))
+double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+    int m=nums1.size(), n = nums2.size();
+    if(m>n) {
+        return findMedianSortedArrays(nums2,nums1);
+    }
+    // m<=n;
+    if(m==0) {
+        int mid2= n/2;
+        if(n%2==1) {
+            return nums2[mid2]; // 3/2 = 1 正中间
+        }
+        else {
+            return nums2[mid2]+nums2[mid2-1]; // 4/2 = 2, 中位数= (a[1]+a[2])/2
+        }
+    }
+    
+    // TODO
+    assert(0);
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -533,6 +626,15 @@ int main()
     cookbooks.assign({{0,13,4,0,0},{17,13,9,2,3},{3,13,12,14,18},{19,13,5,3,6},{14,4,12,3,5}});
     attribute.assign({{13,10},{18,5},{4,8},{4,2},{17,19}});
     cout<< perfectMenu(materials, cookbooks, attribute, 5)<<endl; // 18
+
+    cout<<"N皇后"<<endl;
+    printVectorVector(solveNQueens(4)); // 2,4,1,3或者3,1,4,2
+    printVectorVector(solveNQueens(1)); // 1种
+    cout<< solveNQueens(8).size()<<endl; // 92
+
+    cout<<"N皇后"<<endl;
+    cout<< totalNQueens(4) <<endl; // 2
+    cout<< totalNQueens(8) <<endl; // 92
 
     return 0;
 }
