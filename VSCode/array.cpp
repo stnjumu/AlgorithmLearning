@@ -498,30 +498,82 @@ int totalNQueens(int n) {
 
 // 4. 寻找两个正序数组的中位数
 // 要求O(log(m+n)), 则必须用二分法了；
-// TODO: https://leetcode.cn/problems/median-of-two-sorted-arrays/
 // 思路1：转换成求第k=(m+n)/2小的数，每次比较两个数组第k/2个数，可以确定其中k/2个数一定不是中位数
 //      然后去掉这些数，就转换成找第k/2小的数；每次去掉一半，O(log(m+n))
+//      第i小，i>=0, 第0小表示最小的。
+// TODO: https://leetcode.cn/problems/median-of-two-sorted-arrays/
 // 思路2：分块法，取left = 数组1前i项，数组2前j项，保证i+j=(m+n)/2，其他数为right; 
 // 保证len(left)<=len(right)且相差最多是1，之后探索刚好max(left)<min(right)的情况，即找到了解。
 // O(log(min(m, n)))
-double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+double findKMin(vector<int>& nums1, vector<int>& nums2, int start1, int start2, int k) {
+    int m=nums1.size(), n = nums2.size();
+    // k和k/2从0开始，所以每次去掉k/2+1个数
+    if(start1>=m) {
+        return nums2[start2+k];
+    }
+    if(start2>=n) {
+        return nums1[start1+k];
+    }
+    if(k==0) {
+        return min(nums1[start1], nums2[start2]);
+    }
+
+    int half_k_index1 = min((k-1)/2 + start1, m-1);
+    int half_k_index2 = min((k-1)/2 + start2, n-1);
+    int num1=nums1[half_k_index1], num2 = nums2[half_k_index2];
+
+    if(num1>num2) {
+        int new_k = k-(half_k_index2-start2+1);
+        return findKMin(nums1, nums2, start1, half_k_index2+1, new_k);
+    }
+    else if(num1<num2){
+        int new_k = k-(half_k_index1-start1+1);
+        return findKMin(nums1, nums2, half_k_index1+1, start2, new_k);
+    }
+    else {
+        if(k%2==0) { // 两个都不是，可以去掉比较的两个数和之前所有数，不是去掉k个数因为有可能(k-1)/2有可能超界
+            int new_k = k-(half_k_index1-start1+1)-(half_k_index2-start2+1);
+            return findKMin(nums1, nums2, half_k_index1+1, half_k_index2+1, new_k);
+        }
+        // 超界情况
+        if((k-1)/2+start1 >=m || (k-1)/2+start2>=n) {
+            // 两个都不是
+            int new_k = k-(half_k_index1-start1+1)-(half_k_index2-start2+1);
+            return findKMin(nums1, nums2, half_k_index1+1, half_k_index2+1, new_k);
+        }
+        return num1;
+    }
+}
+double findMedianSortedArrays1(vector<int>& nums1, vector<int>& nums2) {
     int m=nums1.size(), n = nums2.size();
     if(m>n) {
-        return findMedianSortedArrays(nums2,nums1);
+        return findMedianSortedArrays1(nums2,nums1);
     }
     // m<=n;
     if(m==0) {
-        int mid2= n/2;
+        int mid2= n/2; // n=2, mid2=1; n=
         if(n%2==1) {
             return nums2[mid2]; // 3/2 = 1 正中间
         }
         else {
-            return nums2[mid2]+nums2[mid2-1]; // 4/2 = 2, 中位数= (a[1]+a[2])/2
+            return (nums2[mid2]+nums2[mid2-1])/2.0; // 4/2 = 2, 中位数= (a[1]+a[2])/2
         }
     }
     
     // TODO
-    assert(0);
+    int k = (m+n-1)/2;
+
+    if((m+n)%2 == 1)
+        return findKMin(nums1, nums2, 0, 0, k);
+    else {
+        int num1 = findKMin(nums1, nums2, 0, 0, k);
+        int num2 = findKMin(nums1, nums2, 0, 0, k+1);
+        return (num1+num2)/2.0;
+    }
+}
+
+double findMedianSortedArrays1(vector<int>& nums1, vector<int>& nums2) {
+
 }
 
 int main()
@@ -635,6 +687,38 @@ int main()
     cout<<"N皇后"<<endl;
     cout<< totalNQueens(4) <<endl; // 2
     cout<< totalNQueens(8) <<endl; // 92
+
+    cout<<"寻找两个正序数组的中位数"<<endl;
+    vector<int> nums1{1,3};
+    vector<int> nums2{2};
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 2
+
+    nums1.assign({1,3});
+    nums2.assign({2,4});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 2.5
+    nums1.assign({1,2});
+    nums2.assign({3,4});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 2.5
+
+    nums1.assign({1,2,6,8,10});
+    nums2.assign({3,4,6,6,6});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 6
+
+    nums1.assign({});
+    nums2.assign({2,3});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 2.5
+
+    nums1.assign({2,2,4,4});
+    nums2.assign({2,2,4,4});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 3
+
+    nums1.assign({0,0,0,0,0});
+    nums2.assign({-1,0,0,0,0,0,1});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 0
+
+    nums1.assign({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22});
+    nums2.assign({0,6});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 10.5
 
     return 0;
 }
