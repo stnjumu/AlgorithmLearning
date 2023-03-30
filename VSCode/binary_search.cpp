@@ -13,6 +13,7 @@ bool canFinish(vector<int> &piles, int h, int k) {
     return true;
 }
 // 875. 爱吃香蕉的珂珂
+// 左闭右闭，可行解 in [left, right], while条件(left<=right), 迭代条件：left=mid+1, right=mid-1; 结束时left=right+1
 int minEatingSpeed(vector<int>& piles, int h) {
     int right = *max_element(piles.begin(), piles.end());
     int left = 1;
@@ -28,6 +29,7 @@ int minEatingSpeed(vector<int>& piles, int h) {
     // left左边不行，right右边行；left==right+1
     return right+1; // left也行
 }
+// 左开右闭，可行解 in [left, right)，while条件(left<right), 迭代条件: left=mid+1, right=mid; 结束时left=right
 int minEatingSpeed2(vector<int>& piles, int h) { // 结果显示这个稍快一点
     int right = *max_element(piles.begin(), piles.end());
     int left = 1;
@@ -43,6 +45,7 @@ int minEatingSpeed2(vector<int>& piles, int h) { // 结果显示这个稍快一�
     // left左边不行，right和right右边行；left==right
     return left;
 }
+// 左开右闭和左闭右闭是两种风格，很难说哪种更好，个人习惯左开右闭；
 
 // 剑指 Offer 11. 旋转数组的最小数字
 // TODO: 学习标答做法；
@@ -79,6 +82,9 @@ int minArray(vector<int>& numbers) {
     // left == right - 1
     return numbers[right];
 }
+
+// 4. 寻找两个正序数组的中位数
+// 思路见array.cpp，其中一种方法是二分法；
 
 int main() {
     vector<int> piles{3,6,7,11};
