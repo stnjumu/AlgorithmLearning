@@ -704,6 +704,41 @@ double findMedianSortedArrays2(vector<int>& nums1, vector<int>& nums2) {
     return (m+n)%2==1 ? tempMin : (tempMax+tempMin)/2.0;
 }
 
+// 11. 盛最多水的容器
+int maxArea(vector<int>& height) {
+    // 双指针，贪心，O(n)
+    // 关键性质：盛水量和两端高度的最小值有关，再乘距离；
+    // 初始化使用两端，则中间的墙想要盛更多水，肯定要使两端height的最小值提高(因为换用中间的墙会使距离变小)
+    // 所以可以贪心的更换两端的墙中较小的那个；
+    // ? 注意：两端高度相同时怎么办？答案是随便换那个都行；因为中间要想得到更大的水，这两个墙都必须被换；
+    int i=0, j=height.size()-1;
+    if(j<=0) {
+        return 0;
+    }
+
+    int leftHeight=height[i], rightHeight=height[j];
+    int area = (j-i)*min(leftHeight, rightHeight);
+    while(i<j) {
+        if(leftHeight<rightHeight) {
+            i++;
+            if(height[i]>leftHeight) {
+                leftHeight=height[i];
+            }
+        }
+        else {
+            j--;
+            if(height[j]>rightHeight) {
+                rightHeight=height[j];
+            }
+        }
+        int newArea = (j-i)*min(leftHeight, rightHeight);
+        if(newArea>area) {
+            area = newArea;
+        }
+    }
+    return area;
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -851,6 +886,14 @@ int main()
     nums1.assign({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22});
     nums2.assign({0,6});
     cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 10.5
+
+    cout<<"盛最多水的容器"<<endl;
+
+    height.assign({1,8,6,2,5,4,8,3,7});
+    cout<<maxArea(height)<<endl;
+
+    height.assign({1,1});
+    cout<<maxArea(height)<<endl;
 
     return 0;
 }
