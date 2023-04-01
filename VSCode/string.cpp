@@ -273,6 +273,42 @@ bool isMatch2(string s, string p) {
     return f[m][n];
 }
 
+// 17. 电话号码的字母组合
+void back_trace_letterCombinations(vector<string> &digits2Letter, string &digits, int start, vector<string> &ans, string &s) {
+    if(start>=digits.length()) {
+        ans.push_back(s);
+        return;
+    }
+
+    char digit = digits[start]-'0'; // ! 字符转数字；
+    string letters = digits2Letter[digit];
+    for(auto x: letters) {
+        s+=x;
+        back_trace_letterCombinations(digits2Letter, digits, start+1, ans, s);
+        s.pop_back();
+    }
+}
+vector<string> letterCombinations(string digits) {
+    if(digits.empty())
+        return {};
+    vector<string> digits2Letter(10);
+    digits2Letter[2]="abc";
+    digits2Letter[3]="def";
+    digits2Letter[4]="ghi";
+    digits2Letter[5]="jkl";
+    digits2Letter[6]="mno";
+    digits2Letter[7]="pqrs";
+    digits2Letter[8]="tuv";
+    digits2Letter[9]="wxyz";
+    
+    vector<string> ans;
+    string s;
+
+    back_trace_letterCombinations(digits2Letter, digits, 0, ans, s);
+    return ans;
+}
+
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；
@@ -338,6 +374,12 @@ int main() {
     cout<<isMatch("ab",".*")<<endl;
     cout<<isMatch("aabbcc","a*b*c.")<<endl;
     cout<<isMatch("aab","c*a*b")<<endl;
+
+    cout<<"电话号码的字母组合"<<endl;
+    vector<string> ans = letterCombinations("23");
+    for(string s:ans)
+        cout<<s<<" ";
+    cout<<endl;
 
     return 0;
 }
