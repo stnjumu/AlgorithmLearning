@@ -4,6 +4,22 @@ VSCode安装C++环境请看OneNote笔记;
 
 刷算法题推荐VS Code.
 
+## 目前重定向方法
+
+先编译好.exe文件，再手动执行，目前此方法不能测试。
+
+VSCode + Window PowerShell + cpp如何重定向输入输出：(在根目录下)
+
+```powershell
+Get-Content input.txt | .\VSCode\test.exe >output.txt
+```
+
+VSCode + linux shell + cpp如何重定向输入输出：(在根目录下)
+
+```sh
+./VSCode/test.exe <input.txt >output.txt
+```
+
 ## back_trace 回溯
 
 暂时没有整理，分布于多个cpp文件
