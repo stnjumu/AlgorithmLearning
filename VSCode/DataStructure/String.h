@@ -2,6 +2,7 @@
 #include<sstream>
 #include<vector>
 #include<string>
+#include<cctype> // 对char字符操作的库函数，例如isdigit, tolower等;
 using namespace std;
 
 /* 基本用法
@@ -13,6 +14,11 @@ string重载了=赋值运算符，可以直接赋值，而不需要按C语言的
     +和+=只能拼接string, char *, char；注+运算会返回新的临时string对象，+=则是在原对象后面追加，效率较高；
 与字符串相关的stream流处理库和函数为sstream库和stringstream; 
     ! 注意：不要使用strstream库和该库的strstream等类，此库已被弃用，可完全被sstream库替代；
+
+内置erase函数：
+    s.erase(i, n); // 删除s[i, i+n)元素；比algorithm的通用erase好用很多；
+字符char相关库函数：isdigit, islower, tolower等
+    https://zhuanlan.zhihu.com/p/553061732
 */
 
 void printVectorString(vector<string> strings, string name = "vector string") {
