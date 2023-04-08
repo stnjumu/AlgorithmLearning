@@ -498,30 +498,245 @@ int totalNQueens(int n) {
 
 // 4. 寻找两个正序数组的中位数
 // 要求O(log(m+n)), 则必须用二分法了；
-// TODO: https://leetcode.cn/problems/median-of-two-sorted-arrays/
 // 思路1：转换成求第k=(m+n)/2小的数，每次比较两个数组第k/2个数，可以确定其中k/2个数一定不是中位数
 //      然后去掉这些数，就转换成找第k/2小的数；每次去掉一半，O(log(m+n))
+//      第i小，i>=0, 第0小表示最小的。
+// TODO: https://leetcode.cn/problems/median-of-two-sorted-arrays/
 // 思路2：分块法，取left = 数组1前i项，数组2前j项，保证i+j=(m+n)/2，其他数为right; 
-// 保证len(left)<=len(right)且相差最多是1，之后探索刚好max(left)<min(right)的情况，即找到了解。
+// 保证len(left)<=len(right)且相差最多是1，从左到右探索刚好max(left)<min(right)的情况，即找到了解。
+// 但这个思路是O(min(m, n)), 要想log，需要二分，但由于此题非常特殊，存在两端不可行，但中间可行的情况，所求又是从左向右第一个可行的解。
+// ? 所以需要进一步转换，最终看题解，可转换成寻找第一个i, 使nums[i-1]<nums[j], 需要进一步思考；
 // O(log(min(m, n)))
-double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+double findKMin(vector<int>& nums1, vector<int>& nums2, int start1, int start2, int k) {
+    int m=nums1.size(), n = nums2.size();
+    // k和k/2从0开始，所以每次去掉k/2+1个数
+    if(start1>=m) {
+        return nums2[start2+k];
+    }
+    if(start2>=n) {
+        return nums1[start1+k];
+    }
+    if(k==0) {
+        return min(nums1[start1], nums2[start2]);
+    }
+
+    int half_k_index1 = min((k-1)/2 + start1, m-1);
+    int half_k_index2 = min((k-1)/2 + start2, n-1);
+    int num1=nums1[half_k_index1], num2 = nums2[half_k_index2];
+
+    if(num1>num2) {
+        int new_k = k-(half_k_index2-start2+1);
+        return findKMin(nums1, nums2, start1, half_k_index2+1, new_k);
+    }
+    else if(num1<num2){
+        int new_k = k-(half_k_index1-start1+1);
+        return findKMin(nums1, nums2, half_k_index1+1, start2, new_k);
+    }
+    else {
+        if(k%2==0) { // 两个都不是，可以去掉比较的两个数和之前所有数，不是去掉k个数因为有可能(k-1)/2有可能超界
+            int new_k = k-(half_k_index1-start1+1)-(half_k_index2-start2+1);
+            return findKMin(nums1, nums2, half_k_index1+1, half_k_index2+1, new_k);
+        }
+        // 超界情况
+        if((k-1)/2+start1 >=m || (k-1)/2+start2>=n) {
+            // 两个都不是
+            int new_k = k-(half_k_index1-start1+1)-(half_k_index2-start2+1);
+            return findKMin(nums1, nums2, half_k_index1+1, half_k_index2+1, new_k);
+        }
+        return num1;
+    }
+}
+// 击败89%, 30%
+double findMedianSortedArrays1(vector<int>& nums1, vector<int>& nums2) {
     int m=nums1.size(), n = nums2.size();
     if(m>n) {
-        return findMedianSortedArrays(nums2,nums1);
+        return findMedianSortedArrays1(nums2,nums1);
     }
     // m<=n;
     if(m==0) {
-        int mid2= n/2;
+        int mid2= n/2; // n=2, mid2=1; n=
         if(n%2==1) {
             return nums2[mid2]; // 3/2 = 1 正中间
         }
         else {
-            return nums2[mid2]+nums2[mid2-1]; // 4/2 = 2, 中位数= (a[1]+a[2])/2
+            return (nums2[mid2]+nums2[mid2-1])/2.0; // 4/2 = 2, 中位数= (a[1]+a[2])/2
         }
     }
     
     // TODO
-    assert(0);
+    int k = (m+n-1)/2;
+
+    if((m+n)%2 == 1)
+        return findKMin(nums1, nums2, 0, 0, k);
+    else {
+        int num1 = findKMin(nums1, nums2, 0, 0, k);
+        int num2 = findKMin(nums1, nums2, 0, 0, k+1);
+        return (num1+num2)/2.0;
+    }
+}
+
+int myMin(vector<int>& nums1, vector<int>& nums2, int i, int j) {
+    int m = nums1.size(), n = nums2.size();
+    if(i>=m) {
+        assert(j<n);
+        return nums2[j];
+    }
+    if(j>=n) {
+        assert(i<m);
+        return nums1[i];
+    }
+
+    return min(nums1[i], nums2[j]);
+}
+int myMax(vector<int>& nums1, vector<int>& nums2, int i, int j) {
+    // 由于调用时i=mid-1, 所以可能i,j<0;
+    int m = nums1.size(), n = nums2.size();
+    if(i<0 || i>=m) {
+        assert(j>=0 && j<n);
+        return nums2[j];
+    }
+    if(j<0 || j>=n) {
+        assert(i>=0 && i<m);
+        return nums1[i];
+    }
+
+    return max(nums1[i], nums2[j]);
+}
+// TODO: 未AC, 二分法有问题；存在两端不可行，但中间可行的情况，之前思路错了；
+// ! findMedianSortedArrays2错误，可供警戒
+double findMedianSortedArrays2(vector<int>& nums1, vector<int>& nums2) {
+    int m = nums1.size(), n = nums2.size();
+    if(m>n) {
+        return findMedianSortedArrays2(nums2,nums1);
+    }
+    // m<=n;
+    if(m==0) {
+        int mid2= n/2; // n=2, mid2=1; n=
+        if(n%2==1) {
+            return nums2[mid2]; // 3/2 = 1 正中间
+        }
+        else {
+            return (nums2[mid2]+nums2[mid2-1])/2.0; // 4/2 = 2, 中位数= (a[1]+a[2])/2
+        }
+    }
+
+    /*// 两个数组连起来有序
+    // 本来打算先判断一些朴素情况，实际不需要；
+    if(nums1.back()<=nums2[0]) {
+        int mid= (m+n)/2; 
+        if((m+n)%2==1) {
+            if(mid<m)
+                return nums1[mid];
+            else
+                return nums2[mid-m];
+            // return mid<m ? nums1[mid] : nums2[mid-m];
+        }
+        else {
+            int ans1, ans2;
+            ans1 = mid<m ? nums1[mid] : nums2[mid-m];
+            mid--;
+            ans2 = mid<m ? nums1[mid] : nums2[mid-m];
+            return (ans1+ans2)/2.0;
+        }
+    }
+    if(nums2.back()<=nums1[0]) {
+        int mid= (m+n)/2; 
+        if((m+n)%2==1) {
+            if(mid<n)
+                return nums2[mid];
+            else
+                return nums1[mid-n];
+            // return mid<m ? nums1[mid] : nums2[mid-m];
+        }
+        else {
+            int ans1, ans2;
+            ans1 = mid<n ? nums2[mid] : nums1[mid-n];
+            mid--;
+            ans2 = mid<n ? nums2[mid] : nums1[mid-n];
+            return (ans1+ans2)/2.0;
+        }
+    }
+    */
+    // if(nums1 > nums2)
+    //     return findMedianSortedArrays2(nums2,nums1);
+    // 二分寻找i，使nums1[0, i)和nums2[0, j) 全小于剩下的值, i + j = (m+n)/2; 
+    // 这种情况下，寻找从左到右第一个刚好满足这个情况的位置，刚好是二分法；
+    // 先用[left, right) 
+    int left = max(0, (m+n)/2-n), right = min(m, (m+n)/2);
+    /*// 本来打算先判断一些朴素情况，实际不需要；
+    // left=0刚好对应于nums1[0,0)和nums2[0, j)，即全选nums2
+    // 但有可能nums2太短，没有足够的元素占据一半。
+    int i = left, j = (m+n)/2 - i;
+    int tempMax = myMax(nums1,nums2, i-1,j-1);
+    int tempMin = myMin(nums1,nums2, i, j);
+    if(tempMax <= tempMin)
+        return (m+n)%2==1 ? tempMin : (tempMax+tempMin)/2.0;
+    
+    // right刚好对应全选
+    i = right, j = (m+n)/2 - i;
+    tempMax = myMax(nums1,nums2, i-1,j-1);
+    tempMin = myMin(nums1,nums2, i, j);
+    if(tempMax <= tempMin)
+        return (m+n)%2==1 ? tempMin : (tempMax+tempMin)/2.0;
+    */
+    int i,j;
+    int tempMax;
+    int tempMin;
+
+    while(left<right) {
+        // left左边全部不满足，right及right右边全部满足；
+        i = (left+right)/2; // mid
+        j = (m+n)/2 - i;
+
+        tempMax = myMax(nums1,nums2, i-1,j-1);
+        tempMin = myMin(nums1,nums2, i, j);
+        if(tempMax <= tempMin) // mid满足
+            right = i; // right及right右边全部满足；由于left <= mid < right，所以不会存在死循环的情况；
+        else
+            left = i+1; // left左边全部不满足
+    }
+    // left = right, left左边全部不满足，right及right右边全部满足；
+    i = right;
+    j = (m+n)/2 - i;
+    tempMax = myMax(nums1,nums2, i-1,j-1);
+    tempMin = myMin(nums1,nums2, i, j);
+    assert(tempMax<=tempMin);
+    return (m+n)%2==1 ? tempMin : (tempMax+tempMin)/2.0;
+}
+
+// 11. 盛最多水的容器
+int maxArea(vector<int>& height) {
+    // 双指针，贪心，O(n)
+    // 关键性质：盛水量和两端高度的最小值有关，再乘距离；
+    // 初始化使用两端，则中间的墙想要盛更多水，肯定要使两端height的最小值提高(因为换用中间的墙会使距离变小)
+    // 所以可以贪心的更换两端的墙中较小的那个；
+    // ? 注意：两端高度相同时怎么办？答案是随便换那个都行；因为中间要想得到更大的水，这两个墙都必须被换；
+    int i=0, j=height.size()-1;
+    if(j<=0) {
+        return 0;
+    }
+
+    int leftHeight=height[i], rightHeight=height[j];
+    int area = (j-i)*min(leftHeight, rightHeight);
+    while(i<j) {
+        if(leftHeight<rightHeight) {
+            i++;
+            if(height[i]>leftHeight) {
+                leftHeight=height[i];
+            }
+        }
+        else {
+            j--;
+            if(height[j]>rightHeight) {
+                rightHeight=height[j];
+            }
+        }
+        int newArea = (j-i)*min(leftHeight, rightHeight);
+        if(newArea>area) {
+            area = newArea;
+        }
+    }
+    return area;
 }
 
 int main()
@@ -635,6 +850,50 @@ int main()
     cout<<"N皇后"<<endl;
     cout<< totalNQueens(4) <<endl; // 2
     cout<< totalNQueens(8) <<endl; // 92
+
+    cout<<"寻找两个正序数组的中位数"<<endl;
+    vector<int> nums1{1,3};
+    vector<int> nums2{2};
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 2
+
+    nums1.assign({1,3});
+    nums2.assign({2,4});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 2.5
+    nums1.assign({3,4});
+    nums2.assign({1,2});
+    // nums1.assign({3});
+    // nums2.assign({-2,-1});
+    //[3,4]
+    //[1,2,5]
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 2.5
+
+    nums1.assign({1,2,6,8,10});
+    nums2.assign({3,4,6,6,6});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 6
+
+    nums1.assign({});
+    nums2.assign({2,3});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 2.5
+
+    nums1.assign({2,2,4,4});
+    nums2.assign({2,2,4,4});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 3
+
+    nums1.assign({0,0,0,0,0});
+    nums2.assign({-1,0,0,0,0,0,1});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 0
+
+    nums1.assign({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22});
+    nums2.assign({0,6});
+    cout<<findMedianSortedArrays1(nums1, nums2)<<endl; // 10.5
+
+    cout<<"盛最多水的容器"<<endl;
+
+    height.assign({1,8,6,2,5,4,8,3,7});
+    cout<<maxArea(height)<<endl;
+
+    height.assign({1,1});
+    cout<<maxArea(height)<<endl;
 
     return 0;
 }

@@ -3,7 +3,35 @@
 #include<assert.h>
 #include<algorithm>
 #include<unordered_set>
+#include<unordered_map>
 using namespace std;
+
+// 排列数:
+// n个不同的数进行排列n!, n个不同数中取出m个数进行排列n!/(n-m)!
+// n个数，其中有重复元素，用d1,d2, ..., di表示各个数字的重复次数，则n!/d1!/d2!/.../di!
+long long getFactorial(int n) {
+    long long ans;
+    for(int i=1;i<=n;i++) {
+        ans *= i;
+    }
+    return ans;
+}
+long long getPermutationNumOfRepeatNums(vector<int> nums) {
+    if(nums.size()<=1)
+        return nums.size();
+    
+    unordered_map<int,int> map;
+    for(int num: nums) {
+        map[num]+=1;
+    }
+    long long p = getFactorial(nums.size());
+    for(auto it = map.begin(); it!=map.end(); it++) {
+        assert(it->second>=0);
+        p/= getFactorial(it->second);
+    }
+    return p;
+}
+
 // 回溯法；
 // 交换法确定每层选定的值；此法无法按字典序输出；
 void back_tracking(vector<int> &nums, int start) {
@@ -85,6 +113,34 @@ bool my_next_permutation(vector<int> &nums) {
     }
     
 }
+// 简单优化写法；略微提高速度；击败100%, 25%
+bool my_next_permutation2(vector<int> &nums) {
+    int n=nums.size();
+    if(n<=1)
+        return false;
+    // find last s, s.t. nums[s] < nums[s+1]
+    // if not exist, then nums in descending order
+    int s = nums.size()-2;
+    while (s>=0 && nums[s]>=nums[s+1])
+        s--;
+    if(s>=0) { // find s, next_premutation exists.
+        // find last b, s.t. nums[s] < nums[b]
+        int b = nums.size()-1;
+        while (b>s && nums[s]>=nums[b])
+            b--;
+        assert(s<b);
+
+        // swap nums[s], nums[b], and nums[s+1:] in descending order, reverse them;
+        swap(nums[s], nums[b]);
+        reverse(nums.begin()+s+1, nums.end());
+        return true;
+    }
+    else {
+        // all descending order. next_permutation is all ascending order.
+        reverse(nums.begin()+s+1, nums.end());
+        return false; // false表示一次遍历结束；
+    }
+}
 void full_permutation(vector<int> &nums) {
     // next_permutation支持重复数字；生成的全排列中不会包含重复排列；
     do
@@ -93,8 +149,23 @@ void full_permutation(vector<int> &nums) {
             cout<<num<<" ";
         cout<<endl;
     // } while (next_permutation(nums.begin(), nums.end()));
-    } while (my_next_permutation(nums));
+    } while (my_next_permutation2(nums));
     
+}
+// 46. 全排列
+// 击败100%, 83%
+vector<vector<int>> permute(vector<int> &nums) {
+        // next_permutation支持重复数字；生成的全排列中不会包含重复排列；
+        if(nums.size()==0)
+            return {};
+        sort(nums.begin(), nums.end());
+        vector<vector<int>> ans;
+        do
+        {
+            ans.push_back(nums);
+        // } while (next_permutation(nums.begin(), nums.end()));
+        } while (my_next_permutation2(nums));
+        return ans;
 }
 
 int main() {

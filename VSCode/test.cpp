@@ -6,10 +6,13 @@ using namespace std;
 
 int main()
 {
-    vector<int> nums{1,3,4,2,2};
-    vector<int> nums2{1,3,4,2,9};
-    auto x = nums2>=nums;
-    cout<< bool(nums2>=nums)<<endl;
+    int n,k;
+    cin>>n>>k;
+    vector<int> a(n);
+    for(int i=0;i<n;i++) {
+        cin>>a[i];
+        cout<<a[i]<<endl;
+    }
 
     return 0;
 }

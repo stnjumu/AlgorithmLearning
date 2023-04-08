@@ -1,6 +1,7 @@
 #include"DataStructure/String.h"
 #include<vector>
 #include<iomanip>
+#include<assert.h>
 #include<unordered_map>
 using namespace std;
 
@@ -98,6 +99,216 @@ int lengthOfLongestSubstring(string s) {
     return ans;
 }
 
+// 5. 最长回文子串
+// 思路1： 动态规划 O(n^2), O(n^2)
+// dp(i,j)定义为s[i, j]是否是回文字串，j>=i;
+// dp(i,j)=dp(i+1, j-1) && s[i]==s[j]，依赖于右下角；
+// dp(i,i)和dp(i,i+1)易知, 根据两种可往左上角进行递推；
+string longestPalindrome(string s) {
+    if(s.size()<=1) {
+        return s;
+    }
+
+    vector<bool> v;
+    v.assign(s.size(), false);
+    vector<vector<bool>> dp;
+    dp.assign(s.size(), v);
+    
+    for(int i=1;i<s.size();i++) {
+        dp[i][i]=true;
+        dp[i-1][i]=s[i-1]==s[i];
+    }
+    dp[0][0]=true;
+
+    for(int j=1;j<s.size();j++) {
+        for(int i=0;i<j-1;i++) {
+            dp[i][j]=dp[i+1][j-1] && s[i]==s[j];
+        }
+    }
+    
+    // find longest.
+    int maxLen = 1;
+    int maxi=0;
+    for(int j=0;j<s.size();j++) {
+        for(int i=0;i<=j;i++) {
+            if(dp[i][j] && j-i+1>maxLen) {
+                maxi=i;
+                maxLen=j-i+1;
+            }
+        }
+    }
+    return s.substr(maxi, maxLen);
+}
+// 思路2：中心扩展算法 O(n^2), O(1)
+// 所有dp[i,j]只与dp[i+1,j-1]有关，即形成斜向左上的依赖链，我们只需要遍历每个dp[i,i]和每个dp[i,i+1]，向左上角递推即可求得所有dp[i,j]
+    // 实际上，不需要保存所有dp[i,j]，只需保存当前最长的即可。
+string longestPalindrome2(string s) {
+    // 比上面的思路1的快很多，内存也小很多。
+    int n = s.size();
+    if(n<=1)
+        return s;
+
+    int maxLen=1;
+    int maxLeft=0;
+    // 奇数串
+    for(int i=0;i<n;i++) {
+        int len = 1;
+        // dp[i,i] -> dp[i-x, i+x], i-x >=0;
+        for(int j=i-1;j>=0;j--) { // [i-x, i+x] == [j, 2i-j]
+            if(2*i-j < n && s[j]==s[2*i-j]) {
+                len+=2;
+                if(len>maxLen) {
+                    maxLen=len;
+                    maxLeft=j;
+                }
+            }
+            else
+                break;
+        }
+    }
+
+    // 偶数串
+    for(int i=0;i<s.size();i++) {
+        int len=0;
+        // dp[i, i+1] -> dp[i-x, i+1+x]
+        for(int x=0;x<=i;x++) {
+            if(i+1+x<n && s[i-x]==s[i+1+x]) {
+                len+=2;
+                if(len>maxLen) {
+                    maxLen=len;
+                    maxLeft=i-x;
+                }
+            }
+            else
+                break;
+        }
+    }
+    return s.substr(maxLeft, maxLen);
+}
+// 思路3：Manacher算法，O(n) O(n)
+// 利用之前遍历过的回文串的长度，可知，遍历一个回文串右边字符时，其在回文串内部的信息与右边对应字符信息有关系；
+// https://leetcode.cn/problems/longest-palindromic-substring/solution/zui-chang-hui-wen-zi-chuan-by-leetcode-solution/
+
+// 10. 正则表达式匹配
+// dp[i,j]表示s前i项和p前j项匹配，i>=0,j>=0
+// dp[i,j]= {
+//      dp[i,j-2] || dp[i-1,j],     p[j]=='*' and p[j-1]==s[i]  // 对应用/不用
+//      dp[i,j-2],                  p[j]=='*' and p[j-1]!=s[i]
+//      dp[i-1,j-1],                p[j]=='.'
+//      dp[i-1,j-1]&&s[i]==p[j],    others.
+// }
+// 画二维i,j的依赖表格，可知dp[i,j]只依赖于左下方的dp值，所以可以迭代解决；
+// 为了计算方便，可以定义dp[-1,-1]=true；为了C++表示方便，可将定义dp (m+1)*(n+1), 则i,j坐标改成从1开始；
+bool isMatch(string s, string p) {
+    // a . *
+    int m=s.size(), n=p.size();
+    if(m==0&&n==0) {
+        return true;
+    }
+    assert(p[0]!='*');
+
+    vector<bool> v;
+    v.assign(n+1, false);
+    vector<vector<int>> dp(m + 1, vector<int>(n + 1));
+    // vector<vector<bool>> dp;
+    // dp.assign(m+1, v);
+    // dp[0][0]=true; // 多一个0,0利于计算；
+    s= '#'+s;
+    p= '#'+p;
+
+    for(int j=1;j<=n;j++) {
+        for(int i=0;i<=m;i++) { // ! 特别注意i从0开始，见样例s="aab",p="c*a*b"
+            if(p[j]=='*') {
+                if(p[j-1]=='.' || p[j-1]==s[i]) {
+                    // dp[i][j]=dp[i][j-2] || (i>0 &&dp[i-1][j]) || (i>0 &&dp[i-1][j-2]); // 不用/用/用一次
+                    dp[i][j]=dp[i][j-2] || (i>0 &&dp[i-1][j]); // ! 用一次显然能被用和不用的组合替代；不用/用
+                }
+                else {
+                    dp[i][j]=dp[i][j-2];
+                }
+            }
+            else if(p[j]=='.') {
+                dp[i][j]=(i>0 &&dp[i-1][j-1]);
+            }
+            else {
+                dp[i][j]=(i>0 && dp[i-1][j-1]&&s[i]==p[j]);
+            }
+        }
+    }
+    return dp.back().back();
+}
+// 标答：优化了i>0的判断，抽象了matches方法
+bool isMatch2(string s, string p) {
+    int m = s.size();
+    int n = p.size();
+
+    auto matches = [&](int i, int j) { // ! 将复杂的判断匹配过程抽象，lambda表达式；我就是因为判断s和p的位置时坐标需要-1才将s,p前面加了个字符；这里把-1放在了函数中，避免写错；
+        if (i == 0) {
+            return false;
+        }
+        if (p[j - 1] == '.') {
+            return true;
+        }
+        return s[i - 1] == p[j - 1];
+    };
+
+    vector<vector<int>> f(m + 1, vector<int>(n + 1));
+    f[0][0] = true;
+    for (int i = 0; i <= m; ++i) {
+        for (int j = 1; j <= n; ++j) {
+            if (p[j - 1] == '*') {
+                f[i][j] |= f[i][j - 2]; // ! 这句在判断match之前做，可以应对i=0时遇到x*的情况。
+                // 分析p[j-1]=='*'的两种情况可优化成这样；
+                if (matches(i, j - 1)) {
+                    f[i][j] |= f[i - 1][j];
+                }
+            }
+            else {
+                if (matches(i, j)) {
+                    f[i][j] |= f[i - 1][j - 1];
+                }
+            }
+        }
+    }
+    return f[m][n];
+}
+
+// 17. 电话号码的字母组合
+void back_trace_letterCombinations(vector<string> &digits2Letter, string &digits, int start, vector<string> &ans, string &s) {
+    if(start>=digits.length()) {
+        ans.push_back(s);
+        return;
+    }
+
+    char digit = digits[start]-'0'; // ! 字符转数字；
+    string letters = digits2Letter[digit];
+    for(auto x: letters) {
+        s+=x;
+        back_trace_letterCombinations(digits2Letter, digits, start+1, ans, s);
+        s.pop_back();
+    }
+}
+vector<string> letterCombinations(string digits) {
+    if(digits.empty())
+        return {};
+    vector<string> digits2Letter(10);
+    digits2Letter[2]="abc";
+    digits2Letter[3]="def";
+    digits2Letter[4]="ghi";
+    digits2Letter[5]="jkl";
+    digits2Letter[6]="mno";
+    digits2Letter[7]="pqrs";
+    digits2Letter[8]="tuv";
+    digits2Letter[9]="wxyz";
+    
+    vector<string> ans;
+    string s;
+
+    back_trace_letterCombinations(digits2Letter, digits, 0, ans, s);
+    return ans;
+}
+
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；
@@ -148,4 +359,27 @@ int main() {
     cout<<lengthOfLongestSubstring("abcabcbb")<<endl;
     cout<<lengthOfLongestSubstring("bbbbb")<<endl;
     cout<<lengthOfLongestSubstring("pwwkew")<<endl;
+
+    cout<<"最长回文子串"<<endl;
+    cout<<longestPalindrome("babad")<<endl;
+    cout<<longestPalindrome("cbbd")<<endl;
+
+    cout<<"最长回文子串2"<<endl;
+    cout<<longestPalindrome2("babad")<<endl;
+    cout<<longestPalindrome2("cbbd")<<endl;
+
+    cout<<"正则表达式匹配"<<endl;
+    cout<<isMatch("aa","a")<<endl;
+    cout<<isMatch("aa","a*")<<endl;
+    cout<<isMatch("ab",".*")<<endl;
+    cout<<isMatch("aabbcc","a*b*c.")<<endl;
+    cout<<isMatch("aab","c*a*b")<<endl;
+
+    cout<<"电话号码的字母组合"<<endl;
+    vector<string> ans = letterCombinations("23");
+    for(string s:ans)
+        cout<<s<<" ";
+    cout<<endl;
+
+    return 0;
 }
