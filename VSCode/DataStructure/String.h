@@ -31,3 +31,20 @@ void printVectorString(vector<string> strings, string name = "vector string") {
     }
     cout<<"]"<<endl;
 }
+
+void printVectorVectorString(vector<vector<string>> stringss, string name = "vector vector string") {
+    cout<<name<<" = [";
+    for(int i=0;i<stringss.size();i++) {
+        cout<< "[";
+        for(int j=0;j<stringss[i].size();j++) {
+            cout<<stringss[i][j];
+            if(j+1<stringss[i].size())
+                cout<<",";
+        }
+        cout<<"]";
+        if(i+1<stringss.size()) {
+            cout<<",";
+        }
+    }
+    cout<<"]"<<endl;
+}

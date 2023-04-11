@@ -2,6 +2,12 @@
 #include"Math/Math.h"
 #include<assert.h>
 
+/*
+STL Algorithm
+bool binary_search(it_begin, it_end, val), 判断val是否在[begin, end)之间，序列需有序；
+iterator lower_bound(it_begin, it_end, val), 二分查找[begin,end)中第一个大于等于val的位置，序列需有序；iterator-it_begin即下标
+iterator upper_bound(it_begin, it_end, val), 二分查找[begin,end)中第一个大于val的位置，序列需有序；iterator-it_begin即下标
+*/
 // 二分查找
 int binarySearch(vector<int> &nums, int target) {
     // nums有序, 返回目标下标，如果不存在，返回应该插入的位置下标；

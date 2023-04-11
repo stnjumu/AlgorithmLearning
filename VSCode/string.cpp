@@ -2,6 +2,7 @@
 #include<vector>
 #include<iomanip>
 #include<assert.h>
+#include<algorithm>
 #include<unordered_map>
 using namespace std;
 
@@ -308,6 +309,77 @@ vector<string> letterCombinations(string digits) {
     return ans;
 }
 
+// 49. 字母异位词分组
+// 法1. 排序。O(nlogn * klogk), 已实现：击败80%, 83%;
+// 法2. hash. O(nk)
+vector<vector<string>> groupAnagrams(vector<string>& strs) {
+    vector<pair<string,string>> strstr;
+    for(auto &str:strs) {
+        strstr.emplace_back(str, str);
+        sort(strstr.back().first.begin(), strstr.back().first.end());
+    }
+    sort(strstr.begin(), strstr.end(), 
+        [](pair<string,string> &a, pair<string,string> &b){
+            return a.first<b.first;
+        }
+    );
+
+    vector<vector<string>> ans;
+    string last;
+    for(int i=0;i<strstr.size();i++) {
+        if(i==0) {
+            last = strstr[i].first;
+            ans.push_back(vector<string>());
+            ans.back().push_back(strstr[i].second);
+        }
+        else {
+            if(strstr[i].first==last) {
+                ans.back().push_back(strstr[i].second);
+            }
+            else {
+                last = strstr[i].first;
+                ans.push_back(vector<string>());
+                ans.back().push_back(strstr[i].second);
+            }
+        }
+    }
+    return ans;
+}
+
+// 72. 编辑距离
+// dp
+// dp[i,j]表示w1[0,i]到w2[0,j]的最小编辑距离；
+// dp[i,j]= dp[i-1,j-1], w1[i]==w2[j] // 不需要编辑
+//        = min(dp[i-1,j-1]+1,  // 替换
+//              dp[i-1,j]+1,    // 删除w1[i]，(等价于w2添加w1[i])
+//              dp[i,j-1]+1,    // w1添加w2[j], (等价于删除w2[j])
+//              ), w1[i] != w2[j] // 需要编辑
+// 注意：w1的删除和w2的添加是等价的，同理s2的删除和w1的添加也是等价的，
+// 所以就算只提供替换和删除操作(或者替换和添加操作)，本题的做法和递推公式也不会变；
+// 但如果只提供删除操作，则递推公式中需要去掉替换那一项；只提供添加操作也一样；
+// dp[0,0]依赖于左上角，可以初始化dp[-1,-1]=0, dp[-1,j]=j, dp[i,-1]=i, 其中-1表示空串, dp(-1,-1)表示空串和空串不需要编辑，dp(-1,j)表示空串编辑成w2[0,j]的距离；
+// 把上述所有dp下标+1，下标就从0开始了；
+int minDistance(string word1, string word2) {
+    int m=word1.size(), n=word2.size();
+    vector<vector<int>> dp(m+1, vector<int>(n+1));
+    for(int i=0;i<=m;i++) {
+        dp[i][0]=i;
+    }
+    for(int j=0;j<=n;j++) {
+        dp[0][j]=j;
+    }
+    for(int i=1;i<=m;i++) {
+        for(int j=1;j<=n;j++) {
+            if(word1[i-1]==word2[j-1]) {
+                dp[i][j]=dp[i-1][j-1]; // 不需操作
+            }
+            else {
+                dp[i][j]=min({dp[i-1][j], dp[i][j-1], dp[i-1][j-1]})+1; // 操作见上面分析，最终都会是这3个的最小值；
+            }
+        }
+    }
+    return dp.back().back();
+}
 
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
@@ -380,6 +452,15 @@ int main() {
     for(string s:ans)
         cout<<s<<" ";
     cout<<endl;
+
+    cout<<"字母异位词分组"<<endl;
+    vector<string> strs{"eat", "tea", "tan", "ate", "nat", "bat"};
+    printVectorString(strs);
+    printVectorVectorString(groupAnagrams(strs));
+
+    cout<<"编辑距离"<<endl;
+    cout<<minDistance("horse", "ros")<<endl;
+    cout<<minDistance("intention", "execution")<<endl;
 
     return 0;
 }

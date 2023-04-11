@@ -57,6 +57,7 @@ double myPow(double x, int n) {
 // C++中int m>0, (-m%n) == -(m%n); n>0, m%n == m%(-n)
 // ! C++中，m%n的符号和m相同，和n无关；返回值等价于将m一直向0加减n，直到最接近0且仍和m同符号；
 // TODO: 基于上，有m%n + m/n == m；确定下；
+// 标答，快速幂，分析见OneNote算法笔记
 double myPow2(double x, int n) 
 {
     if (n == 0) return 1.0;

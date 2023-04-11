@@ -1,53 +1,14 @@
-#include<iostream>
-#include<vector>
-#include<assert.h>
-#include<algorithm>
-#include<numeric>
-#include<iomanip>
-#include<cctype>
-#include<limits>
+#include <iostream>
+#include <algorithm>
 using namespace std;
 
-
-const int N = 101;
-int n;
-int a[N];
-long long ans;
-
-void back_trace(int start,long long sum1,long long sum2) {
-    if(start>=n) {
-        if(ans>abs(sum1-sum2))
-            ans = abs(sum1-sum2);
-        return;
-    }
-
-    back_trace(start+1, sum1+a[start], sum2);
-    back_trace(start+1, sum1, sum2+a[start]);
-}
-void solve() {
-
-    cin>> n;
-    for(int i=0;i<n;i++)
-        cin>> a[i];
-    
-    long long sum1=0,sum2=0;
-    ans = LLONG_MAX;
-    back_trace(0,sum1,sum2);
-    cout<< ans<<endl;
-
-}
-
-int main() {
-
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    cout.tie(nullptr);
-
-    int t = 1;
-    // cin >> t;
-    while (t--) {
-        solve();
-    }
-
+int main()
+{
+    int arr[] = {1, 2, 3, 4, 5};
+    int n = sizeof(arr) / sizeof(arr[0]);
+    int val = 3;
+    int* pos = lower_bound(arr, arr + n, val);
+    cout << "The position of the first element greater than or equal to " << val << " is: ";
+    cout << (pos - arr) << endl;
     return 0;
 }

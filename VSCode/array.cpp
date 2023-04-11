@@ -739,6 +739,66 @@ int maxArea(vector<int>& height) {
     return area;
 }
 
+// 55. 跳跃游戏
+// 击败9%, 7%
+bool canJump(vector<int>& nums) {
+    int i=0, n=nums.size();
+    if(n==1) {
+        return true;
+    }
+
+    vector<bool> flag(n, false);
+    flag[0]=1;
+    while(i<n-1) {
+        if(flag[i]&&nums[i]>0) {
+            if(i+nums[i]>=n-1) // 可以跳到最后一个；
+                return true;
+            else // 填充可以跳到的位置
+                fill(flag.begin()+i+1, flag.begin()+i+nums[i]+1, true); // flag [i+1, i+nums[i]+1) = true; 注意左开右闭
+        }
+        i++;
+    }
+    // printVector(flag);
+    assert(flag[n-1]==false);
+    return flag[n-1];
+}
+// 优化去掉flag数组，换成能够到达的最远下标max, 维护max即可；击败58%, 35%
+bool canJump2(vector<int>& nums) {
+    int i=0, n=nums.size();
+    if(n==1) {
+        return true;
+    }
+
+    int max=0;
+    while(i<n-1) {
+        if(i<=max&&nums[i]>0) {
+            if(i+nums[i]>=n-1) // 可以跳到最后一个；
+                return true;
+            else {
+                if(i+nums[i]>max)
+                    max = i+nums[i];
+            }
+        }
+        i++;
+    }
+    return false;
+}
+
+// 70. 爬楼梯
+// 思路. dp
+int climbStairs(int n) {
+    // dp[i]=dp[i-1]+dp[i-2], dp[0]=1, dp[1]=1, 求dp[n]
+    // TODO: 可选优化，易知这个等价于求斐波那契数列第n项，此方法可以优化dp空间到O(1)；
+    // 注意斐波那契数列的复杂度可以降到O(log n), 见OneNote笔记，这部分较复杂，不推荐；
+    if(n==1)
+        return 1;
+    vector<int> dp(n+1,1);
+    for(int i=2;i<=n;i++) {
+        dp[i]=dp[i-1]+dp[i-2];
+    }
+    return dp[n];
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -894,6 +954,17 @@ int main()
 
     height.assign({1,1});
     cout<<maxArea(height)<<endl;
+
+    cout<<"跳跃游戏"<<endl;
+    nums.assign({2,3,1,1,4});
+    cout<<canJump(nums)<<endl;
+
+    nums.assign({3,2,1,0,4});
+    cout<<canJump(nums)<<endl;
+
+    cout<<"爬楼梯"<<endl;
+    cout<<climbStairs(2)<<endl;
+    cout<<climbStairs(3)<<endl;
 
     return 0;
 }
