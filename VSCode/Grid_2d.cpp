@@ -77,6 +77,58 @@ int minPathSum(vector<vector<int>>& grid) {
     return grid.back().back();
 }
 
+// 79. 单词搜索
+// 上下左右: vector<vector<int>> direction4{{1,0},{0,1},{-1,0},{0,-1}};
+// ! 使用direction4会超时；定义访问更快的结构；
+int direction4_for_exist[4][2]={{1,0},{0,1},{-1,0},{0,-1}}; // 换用int数组直接击败83%, 20%
+bool back_trace_exist(vector<vector<char>>& board, int i, int j, vector<vector<bool>> &flag, string &word, int start) {
+    int m=board.size(), n=board[0].size();
+    flag[i][j]=true;
+    if(start==word.length()-1) {
+        // 就差最后一个字符匹配了；
+        for(int k=0;k<4;++k) {
+            int new_x = i+direction4_for_exist[k][0];
+            int new_y = j+direction4_for_exist[k][1];
+            if(new_x<0 || new_x>=m || new_y<0 || new_y >=n || flag[new_x][new_y]==true) continue;
+            if(board[new_x][new_y]==word[start]) {
+                flag[i][j]=false; // ! return之前恢复原样，否则一些dfs过但不是解的位置的flag一直是true; 另一方面每次dfs前也不用重置为全false了；
+                return true;
+            }
+        }
+    }
+    else {
+        for(int k=0;k<4;++k) {
+            int new_x = i+direction4_for_exist[k][0];
+            int new_y = j+direction4_for_exist[k][1];
+            if(new_x<0 || new_x>=m || new_y<0 || new_y >=n || flag[new_x][new_y]==true) continue;
+            if(board[new_x][new_y]==word[start] && back_trace_exist(board, new_x,new_y, flag, word, start+1)) {
+                flag[i][j]=false;
+                return true;
+            }
+        }
+    }
+
+    flag[i][j]=false;
+    return false;
+}
+bool exist(vector<vector<char>>& board, string word) {
+    int m=board.size(), n=board[0].size();
+    vector<vector<bool>> flag(m, vector<bool>(n));
+    for(int i=0;i<m;++i) {
+        for(int j=0;j<n;++j) {
+            // for(auto &row: flag) { // ! for each修改vector时，需要引用;
+            //     fill(row.begin(), row.end(), false);
+            // }
+            int start =1;
+            if(word.size()==1 && board[i][j]==word[0])
+                return true;
+            if(board[i][j]==word[0] && back_trace_exist(board, i,j, flag, word, start))
+                return true;
+        }
+    }
+    return false;
+}
+
 int main() {
     cout<<"方向数组示例"<<endl;
     printNextPositions4(0,0,3,3);
@@ -91,6 +143,16 @@ int main() {
     cout<<"最小路径和"<<endl;
     vector<vector<int>> grid{{1,3,1},{1,5,1},{4,2,1}};
     cout<<minPathSum(grid)<<endl;
+
+    cout<<"单词搜索"<<endl;
+    vector<vector<char>> board{{'A','B','C','E'},{'S','F','C','S'},{'A','D','E','E'}};
+    cout<<exist(board, "ABCCED")<<endl;
+    cout<<exist(board, "SEE")<<endl;
+    cout<<exist(board, "ABCB")<<endl;
+    board.assign({{'A','B','C','E'},{'S','F','E','S'},{'A','D','E','E'}});
+    cout<<exist(board, "ABCESEEEFS")<<endl;
+    board.assign({{'C','A','A'},{'A','A','A'},{'B','C','D'}});
+    cout<<exist(board, "AAB")<<endl;
 
     return 0;
 }

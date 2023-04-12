@@ -799,6 +799,31 @@ int climbStairs(int n) {
     return dp[n];
 }
 
+// 75. 颜色分类
+// 只有3种类别，可用3指针，击败100%, 57%;
+// 空间还可优化，利用使用int *指针而不用iterator, 使用前置++而不用后置++(后置++会引入临时变量保存++之前的值)
+void sortColors(vector<int>& nums) {
+    vector<int>::iterator it,it0,it1,it2;
+    it=it0=it1=it2=nums.begin();
+
+    while(it!=nums.end()) {
+        if(*it==0) {
+            *(it2++)=2; // ! 特别注意指针重合的情况，分析知后面的指针需要先赋值；
+            *(it1++)=1;
+            *(it0++)=0;
+        }
+        else if(*it==1) {
+            *(it2++)=2;
+            *(it1++)=1;
+        }
+        else {
+            *(it2++)=2;
+        }
+
+        it++;
+    }
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -965,6 +990,12 @@ int main()
     cout<<"爬楼梯"<<endl;
     cout<<climbStairs(2)<<endl;
     cout<<climbStairs(3)<<endl;
+
+    cout<<"颜色分类"<<endl;
+    nums.assign({2,0,2,1,1,0});
+    printVector(nums);
+    sortColors(nums);
+    printVector(nums);
 
     return 0;
 }

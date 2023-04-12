@@ -61,7 +61,7 @@ vector<string> readBinaryWatch(int turnedOn) {
     return ans; // 一定记得ret；
 }
 
-// 3. 无重复字符的最长字串
+// 3. 无重复字符的最长子串
 int lengthOfLongestSubstring(string s) {
     int n=s.length();
     if(n<=1)
@@ -70,7 +70,7 @@ int lengthOfLongestSubstring(string s) {
     int ans = 0;
     unordered_map<char, int> char_index;
     int i=0;
-    int start=0; // 当前最长字串的left
+    int start=0; // 当前最长子串的left
     int count=0; // right = left + count
     while(i<n) {
         char c = s[i];
@@ -102,7 +102,7 @@ int lengthOfLongestSubstring(string s) {
 
 // 5. 最长回文子串
 // 思路1： 动态规划 O(n^2), O(n^2)
-// dp(i,j)定义为s[i, j]是否是回文字串，j>=i;
+// dp(i,j)定义为s[i, j]是否是回文子串，j>=i;
 // dp(i,j)=dp(i+1, j-1) && s[i]==s[j]，依赖于右下角；
 // dp(i,i)和dp(i,i+1)易知, 根据两种可往左上角进行递推；
 string longestPalindrome(string s) {
@@ -381,6 +381,51 @@ int minDistance(string word1, string word2) {
     return dp.back().back();
 }
 
+// 76. 最小覆盖子串
+// 击败41%, 22%
+bool cover(vector<int> &s_count, vector<int> &t_count) {
+    for(int i=min('A','a');i<=max('Z','z');++i) {
+        if(s_count[i]<t_count[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+string minWindow(string s, string t) {
+    vector<int> s_count(256,0);
+    vector<int> t_count(256,0);
+    for(char c:t) {
+        ++t_count[c];
+    }
+
+    int ansLen=0;
+
+    int right=0,left=0;
+    int bestLeft, bestRight;
+    while(right<s.size()) {
+        ++s_count[s[right]];
+
+        if(cover(s_count, t_count)) {
+            while(t_count[s[left]]<s_count[s[left]]) {
+                --s_count[s[left]];
+                ++left;
+            }
+            if(ansLen==0 || ansLen>right-left+1) {
+                ansLen = right-left+1;
+                bestLeft=left;
+                bestRight=right;
+            }
+        }
+    
+        ++right;
+    }
+
+    if(ansLen!=0)
+        return s.substr(bestLeft, bestRight-bestLeft+1);
+    else
+        return "";
+}
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；
@@ -461,6 +506,11 @@ int main() {
     cout<<"编辑距离"<<endl;
     cout<<minDistance("horse", "ros")<<endl;
     cout<<minDistance("intention", "execution")<<endl;
+
+    cout<<"最小覆盖子串"<<endl;
+    cout<<minWindow("ADOBECODEBANC", "ABC")<<endl;
+    cout<<minWindow("a", "a")<<endl;
+    cout<<minWindow("a", "aa")<<endl;
 
     return 0;
 }
