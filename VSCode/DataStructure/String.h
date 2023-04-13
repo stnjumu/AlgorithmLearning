@@ -14,7 +14,10 @@ string重载了=赋值运算符，可以直接赋值，而不需要按C语言的
     +和+=只能拼接string, char *, char；注+运算会返回新的临时string对象，+=则是在原对象后面追加，效率较高；
 与字符串相关的stream流处理库和函数为sstream库和stringstream; 
     ! 注意：不要使用strstream库和该库的strstream等类，此库已被弃用，可完全被sstream库替代；
-
+string和基本类型int, long long, float, double可以相互转换，使用to_string, stoi, stoll, stof, stod函数即可(C++新增)；
+    ! 注意：to_string对double精度有损失，对int, long long, float没有损失；to_string只能保留7位有效数字，大于float的6位，但小于double的15位；
+    如果需要保留精度转换double到string, 可以使用输出流<sstream>的ostringstream，并配合setprecision(15)设置输出精度，最后只需使用流对象的.str()方法获得输出的string即可。
+    stoi, stoll, stof, stod的精度取决于目标精度，例如stof只有float的精度，stod有double的精度，
 内置erase函数：
     s.erase(i, n); // 删除s[i, i+n)元素；比algorithm的通用erase好用很多；
 字符char相关库函数：isdigit, islower, tolower等

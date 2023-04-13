@@ -440,7 +440,7 @@ int main() {
     // cout.unsetf(ios::fixed); // 取消fixed;
     // cout.precision(6); // 恢复默认精度;
 
-    string s_a = to_string(a), s_aa = to_string(aa), s_b = to_string(b), s_bb = to_string(bb); // ! 看样子to_string也只有7位有效数字；
+    string s_a = to_string(a), s_aa = to_string(aa), s_b = to_string(b), s_bb = to_string(bb); // ! 看样子to_string转换浮点数时也只有7位有效数字，转换整数没有限制；
     cout<< s_a<<" "<<s_aa<<" "<<s_b<<" "<<s_bb<<endl;
     // s_bb只有7位有效数字；
 
@@ -449,7 +449,7 @@ int main() {
     ostringstream oss; // out, 输出用，将其他类型输出到string中; 
     oss << setprecision(15) << bb <<endl; // ? double有效数字有15位，16位不一定准，即前15位保证是准确的；而float有效数字只有6位，前6位保证准确，第7位不一定对；
     string str = oss.str();
-    cout<< str<<endl;
+    cout<< str<<endl; // ostringstream可保证精度；
 
 
     cout<< "string转基本类型: sstream库的istringstream"<<endl;
@@ -457,13 +457,15 @@ int main() {
     double new_bb=0.0;
     iss >> new_bb;
     cout<< new_bb<<endl; // 6位
-    cout<< setprecision(15)<<new_bb<<endl; // bb提供的10位
+    // 上面的setprecision(15)设置的是oss流的精度；所以这里cout输出new_bb精度还是6位
+    cout<< setprecision(15)<<new_bb<<endl; // bb提供的10位, 可保持原精度；
 
+    cout<< s_a<<" "<<s_aa<<" "<<s_b<<" "<<new_bb<<endl;
     a = aa = b = bb = 0;
     a = stoi(s_a); // c++ 11新方法，之前只能用字符数组的atoi等；
     aa = stoll(s_aa);
     b = stof(s_b);
-    bb = stod(s_bb); // 7位有效数字；
+    bb = stod(str); // 没有精度损失；
     cout<< a<<" "<<aa<<" "<<b<<" "<<bb<<endl; // 之前设置了15位有效数字；
 
 

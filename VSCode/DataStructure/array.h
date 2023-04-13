@@ -2,6 +2,7 @@
 
 #include<iostream>
 #include<vector>
+// #include<VECTOR> // Window下C++头文件对大小写不敏感；
 using namespace std;
 
 /*

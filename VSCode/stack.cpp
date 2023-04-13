@@ -2,6 +2,7 @@
 #include<assert.h>
 #include<algorithm>
 #include"DataStructure/Stack.h"
+#include<unordered_map>
 using namespace std;
 
 // 剑指 Offer 09. 用两个栈实现队列
@@ -189,6 +190,183 @@ int scoreOfParentheses(string s) {
     return stk.top();
 }
 
+// * 单调栈专题 496. 503. 84. 907.
+// 496. 下一个更大元素I
+// 下一个刚好是从左往右的下一个，正序即从左往右，两者顺序相同是“弹出是解”，这种更好写一些；建议示例 3 1 2 4 5 7 6 
+vector<int> nextGreaterElementI(vector<int>& nums1, vector<int>& nums2) {
+    // 正序，单调递减栈, 击败92%, 45%;
+    unordered_map<int, int> next_greater_num;
+    stack<int> stack_decrease;
+    for(int i=0;i<nums2.size();++i) {
+        while(!stack_decrease.empty() && nums2[i]>stack_decrease.top()) { // 维护单调栈
+            // * 弹出是解；
+            next_greater_num[stack_decrease.top()]=nums2[i]; // 弹出的元素top和nums2[i]刚好构成一组解；top->nums2[i]
+            stack_decrease.pop();
+        }
+        stack_decrease.push(nums2[i]);
+    }
+    // stack_decrease中剩下的全部没处理，也全是-1;
+
+    for(int i=0;i<nums1.size();++i) {
+        auto it = next_greater_num.find(nums1[i]);
+        if(it!=next_greater_num.end()) {
+            nums1[i]=it->second;
+        }
+        else {
+            nums1[i]=-1;
+        }
+    }
+    return nums1;
+}
+// 下一个和反序的方向相反，则是"压入是解"，这种方法稍微难写一点点；
+// 栈中元素个数则是跟正序/反序时的有序的子序列长度有关，和单调栈的有序顺序相同的子序列长度越大，栈中元素也会更多；但两种方法平均的空间复杂度没有区别；
+vector<int> nextGreaterElementI2(vector<int>& nums1, vector<int>& nums2) {
+    // 反序，单调递减栈, 和正序用的栈一样；击败92%, 40%
+    unordered_map<int, int> next_greater_num;
+    stack<int> stack_decrease; 
+    int n=nums2.size(); // ! 反序遍历需额外存储int的size，还要特别注意从n-1开始
+    for(int i=n-1;i>=0;--i) {
+        while(!stack_decrease.empty() && nums2[i]>stack_decrease.top()) { // 维护单调栈
+            stack_decrease.pop();
+        }
+        if(!stack_decrease.empty()) // 非空，则top > nums2[i]; 现在的top和nums2[i]构成一组解: nums2[i]->top; 刚好和正序方法相反；
+            next_greater_num[nums2[i]]=stack_decrease.top(); // * 压入是解；
+        stack_decrease.push(nums2[i]);
+    }
+    // 栈中存的大部分是有下一个更大值的，上述没处理的全是-1;
+
+    for(int i=0;i<nums1.size();++i) {
+        auto it = next_greater_num.find(nums1[i]);
+        if(it!=next_greater_num.end()) {
+            nums1[i]=it->second;
+        }
+        else {
+            nums1[i]=-1;
+        }
+    }
+    return nums1;
+}
+
+// 503. 下一个更大元素II
+// 击败85%, 44%
+vector<int> nextGreaterElementsII(vector<int>& nums) {
+    // 循环数组；只需要展成[a0, a1, ..., an-1, a0, a1, ..., an-2]，再走一遍单调栈即可；共计算2n-1次；
+    // 有重复元素则栈中需要存下标；
+    // 建议示例：1 1 2 3 4 3
+    vector<int> ans(nums.size(), -1);
+    stack<int> stack_decrease;
+    for(int i=0;i<nums.size();++i) {
+        while(!stack_decrease.empty() && nums[i]>nums[stack_decrease.top()]) { // 维护单调栈
+            ans[stack_decrease.top()]=nums[i];
+            stack_decrease.pop();
+        }
+        stack_decrease.push(i);
+    }
+    for(int i=0;i<nums.size()-1;++i) {
+        while(!stack_decrease.empty() && nums[i]>nums[stack_decrease.top()]) { // 维护单调栈
+            ans[stack_decrease.top()]=nums[i];
+            stack_decrease.pop();
+        }
+        stack_decrease.push(i);
+    }
+    return ans;
+}
+
+// 556. 下一个更大元素III
+// 感觉这题应该是全排列的题，名字一样就放在这里了；两种方法都击败100%, 20%
+int nextGreaterElementIII(int n) {
+    // 1<=n<=2^31-1;
+    // 利用next_permutation算法
+    vector<int> nums;
+    while(n!=0) {
+        nums.push_back(n%10); // 个位在前；
+        n/=10;
+    }
+    reverse(nums.begin(), nums.end());
+
+    if(next_permutation(nums.begin(), nums.end())) {
+        long long ans=0;
+        for(int i=0;i<nums.size();++i) {
+            ans=10*ans+nums[i];
+        }
+        if(ans<=2147483647)
+            return ans;         
+    }
+    return -1;
+}
+int nextGreaterElementIII2(int n) {
+    // 1<=n<=2^31-1;
+    // 利用to_string和stoll；
+    string nums = to_string(n); // to_string对整型没有精度损失；特别注意对double有损失，因为to_string转换浮点数只有7位有效数字；
+
+    if(next_permutation(nums.begin(), nums.end())) {
+        long long ans= stoll(nums);
+        if(ans<= numeric_limits<int>:: max()) // #include<limits>, 等价于INT_MAX, 2147483647
+            return ans;
+    }
+    return -1;
+}
+
+// 84. 柱状图中最大的矩形
+// 求上一个更小元素，单调递增栈，选用正序，两者顺序相反，压入是解；
+// 有重复元素，栈存下标；
+// 压入是解，且求的是小于，则栈中不应存在指向相同大小值的下标(否则压入时就会形成&n->&n的解)；
+vector<int> nextLessPositionLeft(vector<int> &heights) {
+    vector<int> ans(heights.size(), -1); // 默认值left=-1
+    stack<int> increasingStack;
+    for(int i=0;i<heights.size();++i) {
+        // 递增栈，所以为了维护单调性，在压入当前元素时应弹出所有>=当前元素的栈顶
+        while(!increasingStack.empty() && heights[increasingStack.top()]>=heights[i]) { // 栈中无相等，所以>=都弹出
+            increasingStack.pop();
+        }
+        if(!increasingStack.empty()) {
+            ans[i]=increasingStack.top(); // * 压入是解；*top< *i, 所以i -> top
+        }
+        increasingStack.push(i);
+    }
+    return ans;
+}
+// 下一个小于等于元素，单调递增栈，选用正序，两者顺序相同，弹出是解；
+// 有重复元素，栈存下标
+// 弹出是解，求的是小于等于；所以一样值的应该弹出；
+vector<int> nextLessPositionRight(vector<int> &heights) {
+    vector<int> ans(heights.size(), heights.size()); // 默认值right=n;
+    stack<int> increasingStack;
+    for(int i=0;i<heights.size();++i) {
+        while(!increasingStack.empty() && heights[increasingStack.top()]>=heights[i]) { // 相等值的应该构成解，所以>=都弹出
+            // 弹出是解: *top <= *i, i->top;
+            ans[increasingStack.top()]=i;
+            increasingStack.pop();
+        }
+        increasingStack.push(i);
+    }
+    return ans;
+}
+// 击败36%, 5%
+int largestRectangleArea(vector<int>& heights) {
+    vector<int> lefts = nextLessPositionLeft(heights);
+    vector<int> rights = nextLessPositionRight(heights);
+    // 以heights[i]为最右最小值的最大区间范围为(left, right);
+    vector<int> lens(rights.size());
+    for(int i=0;i<lens.size();++i) {
+        lens[i]= rights[i]-lefts[i]-1;
+    }
+    // printVector(lefts, "lefts");
+    // printVector(rights, "rights");
+    // printVector(lens, "lens");
+    
+    for(int i=0;i<lens.size();++i) {
+        lens[i]*= heights[i];
+    }
+    // printVector(lens, "areas");
+    // cout<< *max_element(lens.begin(),lens.end())<<endl;
+
+    return *max_element(lens.begin(),lens.end());
+
+}
+
+// TODO: 907. 所有子数组最小元素之和: https://zhuanlan.zhihu.com/p/103562972
+
 int main()
 {
     cout<<"最小栈"<<endl;
@@ -233,6 +411,27 @@ int main()
     cout<<scoreOfParentheses("()()")<<endl;
     cout<<scoreOfParentheses("(())")<<endl;
     cout<<scoreOfParentheses("((())())()")<<endl;
+
+    cout<<"下一个更大元素I"<<endl;
+    vector<int> nums1{4,1,2}, nums2{1,3,4,2};
+    printVector(nextGreaterElementI2(nums1, nums2));
+    nums1.assign({2,4});
+    nums2.assign({1,2,3,4});
+    printVector(nextGreaterElementI2(nums1, nums2));
+
+    cout<<"下一个更大元素II"<<endl;
+    nums1.assign({1,2,1});
+    printVector(nextGreaterElementsII(nums1));
+    nums1.assign({1,2,3,4,3});
+    printVector(nextGreaterElementsII(nums1));
+
+    cout<<"下一个更大元素II"<<endl;
+    cout<<nextGreaterElementIII2(12)<<endl;
+    cout<<nextGreaterElementIII2(21)<<endl;
+
+    cout<<"柱状图中最大的矩形"<<endl;
+    vector<int> heights{2,1,5,6,2,3};
+    cout<<largestRectangleArea(heights)<<endl;
 
     return 0;
 }
