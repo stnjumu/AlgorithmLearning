@@ -49,7 +49,7 @@ int arrayDirection4[4][2]={{-1,0},{1,0},{0,-1},{0,1}};
 int arrayDirection8[8][2]={{-1,0},{-1,1},{0,1},{1,1},
                                 {1,0},{1,-1},{0,-1},{-1,-1}};
 // examples
-void printNextPositions4(int x,int y, int m, int n) {
+void printArrayNextPositions4(int x,int y, int m, int n) {
     // position = (x, y), grid shape = m*n; x in [0, m), y in [0, n)
     cout<< "next positions of ("<<x<<","<<y<<") is "<<endl;
     // driection=4, 上下左右

@@ -129,6 +129,82 @@ bool exist(vector<vector<char>>& board, string word) {
     return false;
 }
 
+// 85. 最大矩形
+// 思路1：遍历法+略微优化；求每一个点从它开始向左的连续的1的个数，记录在left_num中，同样计算向上的连续1的个数记录在up_num中；
+// 对left_num和up_num每一个都大于1的位置(可能形成长方形)，只需从该点开始向上最多尝试高up_num的矩形，计算这些矩形的最大值；
+// O(mn^2)或O(m^2 n), 击败25%, 52%
+int maximalRectangle(vector<vector<char>>& matrix) {
+    // get_left_num;
+    int m=matrix.size();
+    if(m==0) return 0;
+    int n=matrix[0].size();
+    if(n==0) return 0;
+
+    vector<vector<int>> left_num(m, vector<int>(n));
+    vector<vector<int>> up_num(m, vector<int>(n));
+    int ans=0;
+    for(int i=0;i<m;++i) {
+        for(int j=0;j<n;++j) {
+            if(j==0)
+                left_num[i][j]= matrix[i][j]=='1';
+            else {
+                if(matrix[i][j]=='1') {
+                    left_num[i][j]=left_num[i][j-1]+1;
+                }
+                else {
+                    left_num[i][j]=0;
+                }
+            }
+
+            if(left_num[i][j]>ans)
+                ans = left_num[i][j];
+        }
+    }
+
+    for(int i=0;i<m;++i) {
+        for(int j=0;j<n;++j) {
+            if(i==0)
+                up_num[i][j]= matrix[i][j]=='1';
+            else {
+                if(matrix[i][j]=='1') {
+                    up_num[i][j]=up_num[i-1][j]+1;
+                }
+                else {
+                    up_num[i][j]=0;
+                }
+            }
+
+            if(up_num[i][j]>ans)
+                ans = up_num[i][j];
+        }
+    }
+
+    for(int i=0;i<m;++i) {
+        for(int j=0;j<n;++j) {
+            if(left_num[i][j]>=2 && up_num[i][j]>=2) {
+                int minLeft = left_num[i][j];
+                for(int k=1;k<up_num[i][j];++k) {
+                    assert(i-k>=0);
+                    if(minLeft>left_num[i-k][j])
+                        minLeft=left_num[i-k][j];
+                    
+                    int area = minLeft * (k+1);
+                    if(ans<area) {
+                        ans = area;
+                    }
+                }
+            }
+        }
+    }
+
+    return ans;
+}
+// 思路2：单调栈，分析由left_num和up_num计算矩形面积的过程，可以转化成另一个问题——84. 柱状图中的最大矩形，见stack.cpp；
+// 分析left_num的每一列，将其看成柱状图的输入，则刚好每一列都可以求出以该列为边的最大矩形，遍历所有列即为结果；
+// 同理，up_num的每一行也可以转换成该问题；
+// 复杂度：每行O(n)，共m行，O(mn)；
+// TODO: 代码
+
 int main() {
     cout<<"方向数组示例"<<endl;
     printNextPositions4(0,0,3,3);
@@ -153,6 +229,10 @@ int main() {
     cout<<exist(board, "ABCESEEEFS")<<endl;
     board.assign({{'C','A','A'},{'A','A','A'},{'B','C','D'}});
     cout<<exist(board, "AAB")<<endl;
+
+    cout<<"最大矩形"<<endl;
+    vector<vector<char>> matrix{{'1','0','1','0','0'},{'1','0','1','1','1'},{'1','1','1','1','1'},{'1','0','0','1','0'}};
+    cout<< maximalRectangle(matrix)<<endl;
 
     return 0;
 }

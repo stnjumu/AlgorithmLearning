@@ -191,6 +191,13 @@ int scoreOfParentheses(string s) {
 }
 
 // * 单调栈专题 496. 503. 84. 907.
+/*//单调栈理解：
+遍历过程中，如果一个元素在以后还会用到，我们就需要一个vector存起来；
+下一个更大元素这种要求，刚好会使vector中存的元素满足单调性，因为不满足的刚好构成解(弹出是解)或不满足的刚好被覆盖(压入是解)
+又因为下一个更大元素的局部性，所有可以实现只看栈顶元素，这样就变成了单调栈；
+单调栈相对vector，只会看栈顶O(1)，而vector可以遍历O(n)，所以可以降低复杂度；
+*/
+
 // 496. 下一个更大元素I
 // 下一个刚好是从左往右的下一个，正序即从左往右，两者顺序相同是“弹出是解”，这种更好写一些；建议示例 3 1 2 4 5 7 6 
 vector<int> nextGreaterElementI(vector<int>& nums1, vector<int>& nums2) {
@@ -307,6 +314,66 @@ int nextGreaterElementIII2(int n) {
     return -1;
 }
 
+// 2454. 下一个更大元素IV，求改元素之后第二个大于它的元素，即第二个更大元素；
+// 之前都是求得第一个大于它的元素，现在求第二个
+// ! 错误做法：利用下一个更大元素的数组，查找下一个更大元素的下一个更大元素即可；这样求得的是递增子序列的第二个更大元素，实际上不需要连续递增；
+// * 正确做法：两个栈，从第一个栈弹出表示找到第一个更大元素，进入第二个栈(可用双端队列)，之后第二个栈再遇到更大元素即第二大元素；这里需注意第二个栈压入顺序；
+// 推荐示例: 2 4 0 9 6 和 4 3 10 5 8 1 0 9 2 7 6
+vector<int> firstGreaterElement(vector<int> &nums) {
+    // 从左到右更大，使用单调递减栈；采用正序，弹出是解；
+    // 可能有重复元素，所以栈中存下标；
+    vector<int> ans(nums.size(), -1);
+    stack<int> decreasingStack; // 存index
+    for(int i=0;i<nums.size();++i) {
+        while(!decreasingStack.empty() && nums[decreasingStack.top()] < nums[i]) { // 由于弹出是解，当*top和nums[i]相等时，不应弹出，所以只弹出<
+            // *top < nums[i], top -> i
+            ans[decreasingStack.top()]=i;
+            decreasingStack.pop();
+        }
+        decreasingStack.push(i);
+    }
+
+    return ans;
+}
+// ! 错误做法
+vector<int> secondGreaterElementWrong(vector<int>& nums) {
+    vector<int> firstGreater = firstGreaterElement(nums);
+    printVector(firstGreater);
+    vector<int> ans(nums.size(), -1);
+    for(int i=0;i<nums.size();++i) {
+        if(firstGreater[i] !=-1 && firstGreater[firstGreater[i]])
+            ans[i]=nums[ firstGreater[firstGreater[i]] ];
+    }
+    return ans;
+}
+vector<int> secondGreaterElement(vector<int>& nums) {
+    vector<int> ans(nums.size(), -1);
+    stack<int> decreasingStack; // 存index
+    // 注意两个栈都应该是单调的；
+    stack<int> decreasingStack2, tempStack;
+    for(int i=0;i<nums.size();++i) {
+        while(!decreasingStack2.empty() && nums[decreasingStack2.top()] < nums[i]) {
+            // 发现第二个 *top < nums[i], 解：top -> i, 注意让求的是nums[i]
+            ans[decreasingStack2.top()]=nums[i];
+            decreasingStack2.pop();
+        }
+
+        while(!decreasingStack.empty() && nums[decreasingStack.top()] < nums[i]) { // 由于弹出是解，当*top和nums[i]相等时，不应弹出，所以只弹出<
+            // *top < nums[i], top -> i
+            tempStack.push(decreasingStack.top());
+            decreasingStack.pop();
+        }
+
+        while(!tempStack.empty()) {
+            // decreasingStack2已经弹出所有小于nums[i]的元素，再压入decreasingStack弹出的所有小于nums[i]的元素，不会破坏其单调性；
+            decreasingStack2.push(tempStack.top());
+            tempStack.pop();
+        }
+        decreasingStack.push(i);
+    }
+    return ans;
+}
+
 // 84. 柱状图中最大的矩形
 // 求上一个更小元素，单调递增栈，选用正序，两者顺序相反，压入是解；
 // 有重复元素，栈存下标；
@@ -364,6 +431,8 @@ int largestRectangleArea(vector<int>& heights) {
     return *max_element(lens.begin(),lens.end());
 
 }
+
+// 85. 最大矩形，见Grid_2d.cpp
 
 // TODO: 907. 所有子数组最小元素之和: https://zhuanlan.zhihu.com/p/103562972
 
@@ -429,9 +498,16 @@ int main()
     cout<<nextGreaterElementIII2(12)<<endl;
     cout<<nextGreaterElementIII2(21)<<endl;
 
+    cout<<"下一个更大元素IV: 第二个更大元素"<<endl;
+    nums1.assign({2,4,0,9,6});
+    printVector(secondGreaterElement(nums1));
+    nums1.assign({3,3});
+    printVector(secondGreaterElement(nums1));
+    nums1.assign({272,238,996,406,763,164,102,948,217,760,609});
+    printVector(secondGreaterElement(nums1)); // 406 406 -1 948 -1 217 217 -1 609 -1 -1
+
     cout<<"柱状图中最大的矩形"<<endl;
     vector<int> heights{2,1,5,6,2,3};
     cout<<largestRectangleArea(heights)<<endl;
-
     return 0;
 }

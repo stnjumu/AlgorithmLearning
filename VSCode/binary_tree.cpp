@@ -1,6 +1,127 @@
 #include"DataStructure/BinaryTree.h"
+#include"DataStructure/Array.h"
 #include<iostream>
 using namespace std;
+
+// 102. BFS返回层次序的每层；
+// 思路1：两个队列 (我的实现)
+// ! 思路2：每次只遍历队列中LayerSize个元素 (已实现)，我称为分层BFS;
+vector<vector<int>> getLevelOrder_EachLevel(TreeNode* root) {
+    if(root == NULL)
+        return {}; // 注意不是{{}}，虽然两者输出一样，但{{}}的第一个vector不为空；
+    
+    vector<vector<int>> ans;
+    queue<TreeNode*> q1, q2;
+    q1.push(root);
+    while(!q1.empty() || !q2.empty()) {
+        vector<int> layer;
+        if(!q1.empty()) {
+            assert(q2.empty());
+
+            while(!q1.empty()) {
+                TreeNode *temp = q1.front();
+                layer.push_back(temp->val);
+                if(temp->left!=NULL)
+                    q2.push(temp->left);
+                if(temp->right!=NULL)
+                    q2.push(temp->right);
+                q1.pop();
+            }
+        }
+        else { // 一定要用else, 因为遍历s1时会使s2不为空；从而出错；
+            assert(!q2.empty());
+
+            while(!q2.empty()) {
+                TreeNode *temp = q2.front();
+                layer.push_back(temp->val);
+                if(temp->left!=NULL)
+                    q1.push(temp->left);
+                if(temp->right!=NULL)
+                    q1.push(temp->right);
+                q2.pop();
+            }
+        }
+        ans.push_back(layer);
+    }
+    return ans;
+}
+vector<vector<int>> getLevelOrder_EachLevel2(TreeNode* root) {
+    if(root == NULL)
+        return {}; // 注意不是{{}}，虽然两者输出一样，但{{}}的第一个vector不为空；
+    
+    vector<vector<int>> ans;
+    queue<TreeNode*> q;
+    q.push(root);
+    int depth = 0; // 仅记录深度，本函数中没用；
+    while(!q.empty()) {
+        int layerSize = q.size();
+        // 仅遍历当前层
+        vector<int> layer;
+        for(int i=0;i<layerSize;i++) {
+            TreeNode* temp = q.front();
+            q.pop();
+
+            layer.push_back(temp->val);
+            if(temp->left!=NULL)    
+                q.push(temp->left);
+            if(temp->right!=NULL)
+                q.push(temp->right);
+        }
+        depth++;
+        ans.push_back(layer);
+    }
+    return ans;
+}
+// 103. BFS返回锯齿形的层次序每层
+// 思路1：两个栈 (我的实现)
+// 思路2：同102思路2，
+// 思路2.1: reverse深度为奇数的层的返回值即可；
+// 思路2.2：利用双端队列deque, 深度为奇数的layer倒着遍历deque,倒着插；
+vector<vector<int>> getZigZagLevelOrder(TreeNode* root) {
+    // 已实现的法1：相对从左到右的顺序，需要改动两处：
+    // 1. 把queue换成stack即可；
+    // 2. s2将子网压入s1的顺序应该是先右子树，后左子树；(随便给个样例测试下就能发现)
+    // 法2：把深度(从0开始)为奇数的layer reverse一下即可；
+    if(root == NULL)
+        return {}; // 注意不是{{}}，虽然两者输出一样，但{{}}的第一个vector不为空；
+    
+    vector<vector<int>> ans;
+    stack<TreeNode*> s1, s2; // 改动1
+    s1.push(root);
+    while(!s1.empty() || !s2.empty()) {
+        vector<int> layer;
+        if(!s1.empty()) {
+            assert(s2.empty());
+
+            while(!s1.empty()) {
+                TreeNode *temp = s1.top();
+                layer.push_back(temp->val);
+                if(temp->left!=NULL)
+                    s2.push(temp->left);
+                if(temp->right!=NULL)
+                    s2.push(temp->right);
+                s1.pop();
+            }
+        }
+        else { // 一定要用else, 因为遍历s1时会使s2不为空；从而出错；
+            assert(!s2.empty());
+
+            while(!s2.empty()) {
+                TreeNode *temp = s2.top();
+                layer.push_back(temp->val);
+                if(temp->right!=NULL)  // 改动2，左右交换顺序；
+                    s1.push(temp->right);
+                if(temp->left!=NULL)
+                    s1.push(temp->left);
+                s2.pop();
+            }
+        }
+        ans.push_back(layer);
+    }
+    return ans;
+}
+// 107. 层次序遍历2，按深度倒序返回，即ans中按照从低到顶，从左到右的顺序；将102.的结果reverse一下即可；
+// 199. 二叉树的右视图：返回每层的最右边的值；分层BFS,但每层只返回最后一个节点的值即可；
 
 void back_trace_paths(vector<string> &ans, TreeNode* root, string &path) { // dfs
     // 遍历此节点
@@ -33,6 +154,85 @@ vector<string> getBinaryTreePaths(TreeNode* root) {
     return ans;
 }
 
+// 94. 二叉树的中序遍历
+vector<int> ansInorderTraversal;
+void inorderTraversalSubtree(TreeNode* root) {
+    if(root==NULL) {
+        return;
+    }
+    inorderTraversalSubtree(root->left);
+    ansInorderTraversal.push_back(root->val);
+    inorderTraversalSubtree(root->right);
+}
+vector<int> inorderTraversal(TreeNode* root) {
+    ansInorderTraversal.clear();
+    inorderTraversalSubtree(root);
+    return ansInorderTraversal;
+}
+
+// 101. 对称二叉树
+// 击败36%, 45%
+bool isSymmetricSubtree(TreeNode* leftSubtree, TreeNode* rightSubtree) {
+    if(leftSubtree==NULL && rightSubtree==NULL) // 2个NULL
+        return true;
+    if(leftSubtree==NULL || rightSubtree==NULL) // 1个NULL
+        return false;
+    // 都不是NULL
+    if(leftSubtree->val!=rightSubtree->val) {
+        return false;
+    }
+    // 递归
+    return isSymmetricSubtree(leftSubtree->left, rightSubtree->right) && isSymmetricSubtree(leftSubtree->right, rightSubtree->left);
+}
+bool isSymmetric(TreeNode* root) {
+    return isSymmetricSubtree(root->left, root->right);
+}
+
+// 104. 二叉树的最大深度
+// 击败93%, 89%
+int ansMaxDepth;
+void dfsMaxDepth(TreeNode* subtree, int depth) {
+    if(subtree==NULL) {
+        if(ansMaxDepth<depth)
+            ansMaxDepth = depth;
+        return;
+    }
+
+    dfsMaxDepth(subtree->left, depth+1);
+    dfsMaxDepth(subtree->right, depth+1);
+}
+int maxDepth(TreeNode* root) {
+    ansMaxDepth=0;
+    dfsMaxDepth(root, 0);
+    return ansMaxDepth;
+}
+
+// 114. 二叉树展开为链表
+// 思路：跟着先序遍历的递归顺序构建新的Tree, 只需一个指针指向上一个节点，然后跟着先序顺序一次挂到上一个指针的右边即可；
+// 注意：需要先用局部变量存了当前节点的左右子树指针后，才能把当前节点的left, right设为NULL；
+// 击败89%, 51%
+TreeNode *lastNode;
+void preOrderFlatten(TreeNode* subtree) {
+    if(lastNode == NULL)
+        lastNode = subtree;
+    else
+        lastNode = lastNode->right=subtree;
+
+    TreeNode *leftNode = subtree->left, *rightNode=subtree->right;
+    lastNode->left=NULL;
+    lastNode->right=NULL;
+    if(leftNode!=NULL)
+        preOrderFlatten(leftNode);
+    if(rightNode!=NULL)
+    preOrderFlatten(rightNode);
+}
+void flatten(TreeNode* root) {
+    if(root==NULL)
+        return;
+    lastNode=NULL;
+    preOrderFlatten(root);
+}
+
 int main() {
     TreeNode * root = vectorIntLayerOrder2BinaryTree({3,9, 20, -1, -1, 15, 7});
     printInOrder(root);
@@ -62,5 +262,52 @@ int main() {
     for(string s: paths) {
         cout<<"\""<< s <<"\",";
     }
+    cout<<endl;
     deleteBinaryTree(root);
+
+    cout<<"二叉树的中序遍历"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({1,-1,2,3});
+    printLevelOrder(root, true);
+    printVector(inorderTraversal(root));
+    deleteBinaryTree(root);
+
+    cout<<"对称二叉树"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({1,2,2,3,4,4,3});
+    printLevelOrder(root, true);
+    cout<<isSymmetric(root)<<endl;
+    deleteBinaryTree(root);
+    
+    root = vectorIntLayerOrder2BinaryTree({1,2,2,-1,3,-1,3});
+    printLevelOrder(root, true);
+    cout<<isSymmetric(root)<<endl;
+    deleteBinaryTree(root);
+
+    cout<<"二叉树的最大深度"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({3,9,20,-1,-1,15,7});
+    printLevelOrder(root, true);
+    cout<<maxDepth(root)<<endl;
+    deleteBinaryTree(root);
+
+    cout<<"从前序与中序遍历序列构造二叉树"<<endl;
+    vector<int> preorder{3,9,20,15,7}, inorder{9,3,15,20,7};
+    root = buildTree(preorder, inorder);
+    printLevelOrder(root, true);
+    deleteBinaryTree(root);
+    
+    preorder.assign({-1}); 
+    inorder.assign({-1});
+    root = buildTree(preorder, inorder); // ! 注意vectorIntLayerOrder2BinaryTree构建不支持-1做为节点；
+    // printLevelOrder(root, true);
+    printLevelOrder(root, false); // ! 注意我的printLevelOrderExpand不支持-1;
+    deleteBinaryTree(root);
+
+    cout<<"二叉树展开为链表"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({1,2,5,3,4,-1,6});
+    printLevelOrder(root, true);
+    flatten(root);
+    printLevelOrder(root, true);
+    deleteBinaryTree(root);
+
+
+    return 0;
 }
