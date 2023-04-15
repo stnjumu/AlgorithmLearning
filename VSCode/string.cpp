@@ -426,6 +426,54 @@ string minWindow(string s, string t) {
         return "";
 }
 
+// 139. 单词拆分
+// 思路1：暴力法
+// 思路2：dp
+// * s[start, start+size)表示从s[start]开始的长为size的子串，[start, end)表示的串长为end-start, [start, end]表示的串长为end-start+1;
+bool backtracingIsMatchWordBreak(string &s, int start, vector<string>& wordDict) {
+    if(start == s.length())
+        return true;
+    
+    for(auto &word: wordDict) {
+        if(start+word.size()<=s.length()) {
+            if(s.substr(start, word.size()) == word) {
+                bool flag = backtracingIsMatchWordBreak(s, start+word.size(), wordDict);
+                if(flag)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+bool wordBreak1(string s, vector<string>& wordDict) {
+    return backtracingIsMatchWordBreak(s, 0, wordDict);
+}
+// dp; dp[n]表示s[0,n)能够拆分成wordDict;
+// dp[i]= 所有word的情况的或, 长为j的word: dp[i-j] && s[i-j, i) == word;
+// 显然，所有dp[i]只依赖于dp[i]左边的子问题，可以动态规划，从左到右一遍即可；
+// dp[0]=true;
+// 击败92%, 90%
+bool wordBreak(string s, vector<string>& wordDict) {
+    vector<bool> dp(s.length()+1, false);
+    dp[0]=true;
+
+    for(int i=0;i<s.size();++i) {
+        if(dp[i]) {
+            for(string &word:wordDict) {
+                if(i+word.size()<=s.length() && dp[i+word.size()]==true) {
+                    // 已经可行，不需再判断了；
+                    continue;
+                }
+
+                if(i+word.size()<=s.length() && s.substr(i, word.size())==word) {
+                    dp[i+word.size()]=true;
+                }
+            }
+        }
+    }
+    return dp[s.length()];
+}
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；
@@ -513,6 +561,13 @@ int main() {
     cout<<minWindow("ADOBECODEBANC", "ABC")<<endl;
     cout<<minWindow("a", "a")<<endl;
     cout<<minWindow("a", "aa")<<endl;
+
+    cout<<"单词拆分"<<endl;
+    strs.assign({"leet", "code"});
+    cout<<wordBreak("leetcode", strs)<<endl;
+    
+    strs.assign({"cats", "dog", "sand", "and", "cat"});
+    cout<<wordBreak("catsandog", strs)<<endl;
 
     return 0;
 }

@@ -49,7 +49,7 @@ public:
     }
 
     void print() {
-        cout<<"DList = ";
+        cout<<"SList = ";
         SingleLinkedNode* p = head->next;
         while (p!=NULL)
         {

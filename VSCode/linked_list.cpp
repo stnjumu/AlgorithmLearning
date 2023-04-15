@@ -72,6 +72,71 @@ ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
     return head;
 }
 
+// 142. 环形链表II
+// Floyd判圈法，快慢指针
+bool hasCycle(ListNode *head) {
+    if (head == NULL)
+        return false;
+    ListNode* fast = head, *slow = head;
+    // ! 必须使用do while, 因为刚开始slow==fast;
+    do {
+        slow = slow->next;
+        fast = fast->next;
+        if (fast!=NULL)
+        {
+            fast = fast->next;
+        }
+    } while (fast!=NULL && slow!=NULL && fast!=slow);
+
+    if (fast==NULL || slow==NULL)
+    {
+        return false;
+    }
+    else if (fast==slow)
+    {
+        return true;
+    }
+    else
+    {
+        cout << "Can't be here!" << endl;
+        return false;
+    }
+}
+// 142. 环形链表II
+// Floyd判圈法，快慢指针
+// 分析可先分析圈较大的情况，这时fast比slow多走一圈，设非环部分长h, 圈中slow走了s，圈中除了s的剩余部分为f;
+// 则h+s为slow走的，s+f为圈大小，fast比slow多走一圈，且相遇在h+s处，显然有2(h+s)=(h+s)+(f+s)，即h+s=f+s, h=f;
+// 显然请另一个slow2指针从起点开始，slow从h+s处开始，两者都走h步后恰好相遇在入口节点；(第一次相遇)
+// 再分析圈较小的情况，则fast会多走几圈，有k(f+s)=h+s, 整理得h=f+(k-1)(f+s)，用上面得方法，两个slow走了h步后也会刚好在入口节点相遇；
+// 击败98%, 96%
+ListNode *detectCycle(ListNode *head) {
+    if (head == NULL)
+        return NULL;
+    ListNode* fast = head, *slow = head;
+    // ! 必须使用do while, 因为刚开始slow==fast;
+    do {
+        slow = slow->next;
+        fast = fast->next;
+        if (fast!=NULL)
+        {
+            fast = fast->next;
+        }
+    } while (fast!=NULL && slow!=NULL && fast!=slow);
+
+    if (fast==NULL || slow==NULL)
+    {
+        return NULL;
+    }
+    
+    // 有环
+    fast = head; // fast做为第二个slow指针，下面每次只走一步
+    while(fast!=slow) {
+        fast=fast->next;
+        slow=slow->next;
+    }
+    return slow;
+}
+
 // 160. 两个链表的第一个公共节点
 pair<ListNode*, ListNode*> buildListHasIntersectionNode(vector<int> a1, vector<int> b1, vector<int> shared_tail) {
     if(shared_tail.empty()) {
@@ -135,6 +200,28 @@ ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
     return pa;
 }
 
+ListNode* sortList(ListNode* head) {
+    if(head==NULL || head->next==NULL)
+        return head;
+
+    vector<ListNode*> numPointer;
+    ListNode* p=head;
+    while(p!=NULL) {
+        numPointer.push_back(p);
+        p=p->next;
+    }
+
+    sort(numPointer.begin(), numPointer.end(), [](ListNode* p1, ListNode*p2) {
+        return p1->val<p2->val;
+    });
+
+    for(int i=1;i<numPointer.size();i++) {
+        numPointer[i-1]->next=numPointer[i];
+    }
+    numPointer.back()->next=NULL;
+    return numPointer[0];
+}
+
 int main()
 {
     cout<<"合并两个有序链表"<<endl;
@@ -159,6 +246,12 @@ int main()
     else
         cout<<list3->val<<endl;
     deleteListHasIntersectionNode(twoList.first, twoList.second, list3);
+
+    cout<<"排序链表"<<endl;
+    list1 = vector2List({4,2,1,3});
+    list1 = sortList(list1);
+    printList(list1);
+    deleteList(list1);
 
     return 0;
 }

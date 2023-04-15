@@ -1,6 +1,7 @@
 #include"DataStructure/BinaryTree.h"
 #include"DataStructure/Array.h"
 #include<iostream>
+#include<unordered_map>
 using namespace std;
 
 // 102. BFS返回层次序的每层；
@@ -233,6 +234,82 @@ void flatten(TreeNode* root) {
     preOrderFlatten(root);
 }
 
+// ! 124. 二叉树中的最大路径和
+// 击败5%, 5%
+// TODO: 改进：getG和GetSMax两者可以合到同一个dfs中去；
+unordered_map<TreeNode*, int> G_maxPathSum;
+int ans_maxPathSum;
+void dfsGetG(TreeNode* subtree) {
+    if(subtree==NULL)
+        return;
+    
+    dfsGetG(subtree->left);
+    dfsGetG(subtree->right);
+    G_maxPathSum[subtree]=max({0, G_maxPathSum[subtree->left]+subtree->val, G_maxPathSum[subtree->right]+subtree->val});
+}
+void dfsGetSMax(TreeNode* subtree) {
+    if(subtree==NULL)
+        return;
+    
+    int ans = subtree->val + max(G_maxPathSum[subtree->left], 0) + max(G_maxPathSum[subtree->right], 0);
+    if(ans>ans_maxPathSum)
+        ans_maxPathSum=ans;
+
+    dfsGetSMax(subtree->left);
+    dfsGetSMax(subtree->right);
+}
+int maxPathSum(TreeNode* root) {
+    G_maxPathSum.clear();
+    G_maxPathSum[NULL]=0;
+    dfsGetG(root);
+
+    // ans_maxPathSum = 0; // 如果包含空路径； 
+    ans_maxPathSum = INT_MIN; // 此题不包含空路径，即路径必须有一个节点；
+    dfsGetSMax(root);
+    return ans_maxPathSum;
+}
+// 改进；还是击败5%,5%
+void dfsGetGAndSMax(TreeNode* subtree) {
+    if(subtree==NULL)
+        return;
+    
+    dfsGetGAndSMax(subtree->left);
+    dfsGetGAndSMax(subtree->right);
+
+    G_maxPathSum[subtree]=max({0, G_maxPathSum[subtree->left]+subtree->val, G_maxPathSum[subtree->right]+subtree->val});
+    int ans = subtree->val + max(G_maxPathSum[subtree->left], 0) + max(G_maxPathSum[subtree->right], 0);
+    if(ans>ans_maxPathSum)
+        ans_maxPathSum=ans;
+}
+int maxPathSum2(TreeNode* root) {
+    G_maxPathSum.clear();
+    G_maxPathSum[NULL]=0;
+    // ans_maxPathSum = 0; // 如果包含空路径； 
+    ans_maxPathSum = INT_MIN; // 此题不包含空路径，即路径必须有一个节点；
+    dfsGetGAndSMax(root);
+    return ans_maxPathSum;
+}
+// 改进2；每个节点的Gain可以用返回值存，不用hashmap了
+// 击败59%, 63%
+int dfsGetGainAndAns(TreeNode* subtree) {
+    if(subtree==NULL)
+        return 0;
+    
+    int GainLeft = dfsGetGainAndAns(subtree->left);
+    int GainRight = dfsGetGainAndAns(subtree->right);
+
+    int GainRoot = max(0, max(GainLeft+subtree->val, GainRight+subtree->val));
+    int ans = subtree->val + GainLeft + GainRight;
+    if(ans>ans_maxPathSum)
+        ans_maxPathSum=ans;
+    return GainRoot;
+}
+int maxPathSum3(TreeNode* root) {
+    ans_maxPathSum = INT_MIN; // 此题不包含空路径，即路径必须有一个节点；
+    dfsGetGainAndAns(root);
+    return ans_maxPathSum;
+}
+
 int main() {
     TreeNode * root = vectorIntLayerOrder2BinaryTree({3,9, 20, -1, -1, 15, 7});
     printInOrder(root);
@@ -306,6 +383,22 @@ int main() {
     printLevelOrder(root, true);
     flatten(root);
     printLevelOrder(root, true);
+    deleteBinaryTree(root);
+
+    cout<<"二叉树中的最大路径和"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({1,2,3});
+    printLevelOrder(root, true);
+    cout<<maxPathSum3(root)<<endl;
+    deleteBinaryTree(root);
+
+    root = vectorIntLayerOrder2BinaryTree({-10,9,20,-1,-1,15,7}); // 注意其中-1是特殊空结点标志；
+    printLevelOrder(root, true);
+    cout<<maxPathSum3(root)<<endl;
+    deleteBinaryTree(root);
+
+    root = vectorIntLayerOrder2BinaryTree({-3});
+    printLevelOrder(root, true);
+    cout<<maxPathSum3(root)<<endl;
     deleteBinaryTree(root);
 
 

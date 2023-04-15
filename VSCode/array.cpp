@@ -4,7 +4,9 @@
 #include<assert.h>
 #include<algorithm>
 #include<string>
+#include<numeric>
 #include<unordered_set>
+#include<unordered_map>
 #include<cmath>
 // abs() in cmath.
 using namespace std;
@@ -824,6 +826,108 @@ void sortColors(vector<int>& nums) {
     }
 }
 
+// ! 128. 最长连续序列
+// 暴力法, O(n^2)
+// 这里使用了set，每次查找特定元素变成O(1)了，如果不用set, 在nums中查找特定元素是O(n)，则该暴力方法复杂度为O(n^3)
+int longestConsecutive1(vector<int>& nums) {
+    unordered_set<int> set;
+    for(int i=0;i<nums.size();++i) {
+        set.insert(nums[i]);
+    }
+
+    int ans = 0;
+    for(int ai: set) {
+        // count left
+        int count_left = 1;
+        while(set.find(ai-count_left)!=set.end()) {
+            count_left++;
+        }
+        // (ai-count_left, ai]刚好count_left个；
+
+        // count right
+        int count_right = 1;
+        while(set.find(ai+count_right)!=set.end()) {
+            count_right++;
+        }
+        // [ai, ai+count_right)刚好count_right个；
+
+        if(ans<count_left+count_right-1) {
+            ans=count_left+count_right-1;
+        }
+    }
+    return ans;
+}
+// 优化，单方向count; 
+// ! 上面的方法每个元素都在两个方向遍历，例如对1,2,3,4，显然1-4被遍历了4次，实际上只需从最左边开始遍历一次；
+// 注意优化后每段连续序列都只会从最左开始遍历一次，所以O(n)，击败51%, 50%
+int longestConsecutive2(vector<int>& nums) {
+    unordered_set<int> set;
+    for(int i=0;i<nums.size();++i) {
+        set.insert(nums[i]);
+    }
+
+    int ans = 0;
+    for(int ai: set) {
+        if(set.find(ai-1)==set.end()) {
+            // only count right
+            int count_right = 1;
+            while(set.find(ai+count_right)!=set.end()) {
+                count_right++;
+            }
+            // [ai, ai+count_right)刚好count_right个；
+
+            if(ans<count_right) {
+                ans=count_right;
+            }
+        }
+    }
+    return ans;
+}
+// TODO: 并查集, 注意并查集的查找是O(log*n)并不是O(1)，所以最终严格上不算O(n)，但一般应用中，O(log*n)非常小，可认为是常数；
+
+// 152. 乘积最大子数组
+// ! 利用前缀积，因为0的存在，所以走不通，千万注意此点，而且前缀积/前缀和的代码比较复杂，甚至不如直接遍历；
+// 直接遍历法, O(n^2), 击败5%, 72%
+int maxProduct(vector<int>& nums) {
+    int ans = INT_MIN;
+    int partialProduct;
+    for(int i=0;i<nums.size();++i) {
+        partialProduct = 1;
+        for(int j=i;j<nums.size();++j) {
+            partialProduct *= nums[j];
+            if(partialProduct>ans)
+                ans = partialProduct;
+            if(partialProduct==0)
+                break;
+        }
+    }
+
+    return ans;
+}
+// dp; dp_max[i]表示nums[0, i]的最大正乘积，dp_min[i]表示nums[0,i]的最小负乘积；
+// if nums[i]>0, dp_max[i]= max(nums[i], dp_max[i-1]*nums[i]), dp_min[i]= dp_min[i-1]*nums[i]
+// if nums[i]<0, dp_min[i]= min(nums[i], dp_max[i-1]*nums[i]), dp_max[i]= dp_min[i-1]*nums[i]
+// if nums[i]==0, dp_max[i]= dp_min[i-1] = 0;
+// ! 这种dp定义初始值无法确定；如果使用0或1或-1或nums[0]等都不行，见反例{-2};
+// 注意到dp[i]只与dp[i-1]有关，所以可优化dp空间；
+
+// * 更正：dp_max[i]表示nums[0, i]的最大乘积，dp_min[i]表示nums[0,i]的最小乘积；
+// dp_max[i] = max(nums[i]*dp_max[i-1], nums[i]*dp_min[i-1], nums[i]);
+// dp_max[i] = min(nums[i]*dp_max[i-1], nums[i]*dp_min[i-1], nums[i]);
+// O(n), 击败62%, 82%
+int maxProductDP(vector<int>& nums) {
+    int dp_max=nums[0], dp_min=nums[0];
+    int ans = nums[0];
+    for(int i=1;i<nums.size();++i) {
+        int old_max = dp_max; // ! 注意dp_max
+        dp_max = max(max(nums[i], dp_max*nums[i]), dp_min*nums[i]);
+        dp_min = min(min(nums[i], old_max*nums[i]), dp_min*nums[i]);
+        ans = max(ans, dp_max);
+    }
+
+    return ans;
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -996,6 +1100,20 @@ int main()
     printVector(nums);
     sortColors(nums);
     printVector(nums);
+
+    cout<<"最长连续序列"<<endl;
+    nums.assign({100,4,200,1,3,2});
+    cout<<longestConsecutive2(nums)<<endl;
+    nums.assign({0,3,7,2,5,8,4,6,0,1});
+    cout<<longestConsecutive2(nums)<<endl;
+
+    cout<<"乘积最大子数组"<<endl;
+    nums.assign({2,3,-2,4});
+    cout<< maxProductDP(nums)<<endl;
+    nums.assign({-2});
+    cout<< maxProductDP(nums)<<endl;
+    nums.assign({-4, -3, -2});
+    cout<< maxProductDP(nums)<<endl;
 
     return 0;
 }
