@@ -149,7 +149,63 @@ vector<int> spiralOrder2(vector<vector<int>>& matrix) {
 
         return res;
 
+}
+// 自己写，使用方向数组direction4，并使用next_x, next_y
+vector<int> spiralOrder3(vector<vector<int>>& matrix) {
+    // m>=1, n>=1;
+    int m=matrix.size();
+    int n=matrix[0].size();
+    vector<int> ans;
+
+    // 右下左上
+    int arrayDirection4[4][2]={{0,1},{1,0},{0,-1},{-1,0}};
+    
+    vector<int> start;
+    vector<vector<int>> end;
+    int layer = 0;
+    int layerMax = min((m+1)/2,(n+1)/2);
+    while(layer<layerMax) {
+        start.assign({layer, layer});
+        end.assign({{layer,n-1-layer}, {m-1-layer, n-1-layer}, {m-1-layer, layer}, {layer,layer}});
+        // 特殊情况，这一圈只有一行或一列元素，不能先输出再走再判断;
+        // ! 说明我的方法还不够优雅，推荐面试时写最简单的方法；使用direction4, 且使用next_x, next_y， 并且使用flag;
+        if(layer == m-1-layer) {
+            // 只有一行；
+            while(start[1]<=n-1-layer) {
+                ans.push_back(matrix[start[0]][start[1]]);
+                ++start[1];
+            }
+            break; // 最后一圈；
+        }
+        if(layer == n-1-layer) {
+            // 只有一列；
+            while(start[0]<=m-1-layer) {
+                ans.push_back(matrix[start[0]][start[1]]);
+                ++start[0];
+            }
+            break; // 最后一圈；
+        }
+
+        for(int dir =0; dir<4; ++dir) {
+            while(true) {
+                // 先输出，再走, 走了再判断；
+                ans.push_back(matrix[start[0]][start[1]]);
+
+                start[0] = start[0] + arrayDirection4[dir][0];
+                start[1] = start[1] + arrayDirection4[dir][1];
+                // 以第一圈为例：路程为
+                // dir = 0: [(0,0), (0, n-1)) 左开右闭区间, 即end位置不输出；
+                // dir = 1: [(0,n-1), (n-1, n-1)) 
+                // dir = 2: [(n-1,n-1), (n-1, 0)) 
+                // dir = 3: [(n-1,0), (0, 0)) 
+                if(start[0] == end[dir][0] && start[1] == end[dir][1]) break;
+            }
+        }
+        ++layer; // ! don't forget;
     }
+    return ans;
+}
+// TODO: 推荐面试时写最简单的方法；使用direction4, 且使用next_x, next_y， 并且使用flag;
 
 // 剑指 Offer 60. n个骰子的点数
 // dp[n, i]表示n个骰子的第i个点数的概率；
@@ -940,14 +996,15 @@ int main()
     height.assign({4,2,3});
     cout<< trap1(height)<<endl;
 
+    cout<<"螺旋数组"<<endl;
     vector<vector<int>> matrix{{1,2,3},{4,5,6},{7,8,9}};
-    printVector(spiralOrder(matrix));
+    printVector(spiralOrder3(matrix));
 
     matrix.assign({{1,2,3,4},{5,6,7,8},{9,10,11,12}});
-    printVector(spiralOrder(matrix));
+    printVector(spiralOrder3(matrix));
 
     matrix.assign({{7},{9},{6}});
-    printVector(spiralOrder(matrix));
+    printVector(spiralOrder3(matrix));
 
     cout<< "n个骰子的点数"<<endl;
     printVector(dicesProbability(1));
