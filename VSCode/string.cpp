@@ -491,7 +491,6 @@ int main() {
     string s_a = to_string(a), s_aa = to_string(aa), s_b = to_string(b), s_bb = to_string(bb); // ! 看样子to_string转换浮点数时也只有7位有效数字，转换整数没有限制；
     cout<< s_a<<" "<<s_aa<<" "<<s_b<<" "<<s_bb<<endl;
     // s_bb只有7位有效数字；
-
     
     cout<< "基本类型转string: sstream库的ostringstream"<<endl;
     ostringstream oss; // out, 输出用，将其他类型输出到string中; 

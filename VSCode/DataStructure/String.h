@@ -2,7 +2,7 @@
 #include<sstream>
 #include<vector>
 #include<string>
-#include<cctype> // 对char字符操作的库函数，例如isdigit, tolower等;
+#include<cctype> // 对char字符操作的库函数，例如isdigit()数字, isalpha()字母, isalnum()字母数字, isupper, toupper,tolower等;
 using namespace std;
 
 /* 基本用法
