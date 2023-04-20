@@ -72,6 +72,38 @@ ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
     return head;
 }
 
+// 206. 反转链表
+// 空头节点，头插法，击败7%, 40%
+ListNode* reverseList(ListNode* head) {
+    ListNode *headNull = new ListNode(-1);
+
+    while(head!=NULL) {
+        // 头插法
+        ListNode *temp = head;
+        head = head->next;
+
+        temp->next=headNull->next;
+        headNull->next=temp;
+    }
+
+    head = headNull->next;
+    delete headNull;
+    return head;
+}
+// 迭代版本，两个指针即可；击败93%, 78%
+ListNode* reverseList(ListNode* head) {
+    ListNode *prev = NULL;
+
+    while(head!=NULL) {
+        // ... <- prev -> head -> ...
+        ListNode *temp = head->next;
+        head->next = prev;
+        prev = head;
+        head = temp;
+    }
+    return prev;
+}
+
 // ! 25. K个一组翻转链表
 // 思路1：使用双端队列保存k个节点，每凑够k个就反序插入，不够就正序插入；时间O(n), 空间O(k)
 // 思路2：优化成O(1)空间复杂度；双指针，[left, right)凑够k个就头插法反序；
