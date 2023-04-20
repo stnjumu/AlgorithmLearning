@@ -72,6 +72,51 @@ ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
     return head;
 }
 
+// ! 25. K个一组翻转链表
+// 思路1：使用双端队列保存k个节点，每凑够k个就反序插入，不够就正序插入；时间O(n), 空间O(k)
+// 思路2：优化成O(1)空间复杂度；双指针，[left, right)凑够k个就头插法反序；
+// 下面是思路2的实现，只需记住[left, right)左开右闭会非常好做，翻转[left, right]的话会比较难做；
+ListNode* reverseKGroup(ListNode* head, int k) {
+    if(k<=1)
+        return head;
+    
+    ListNode *headNull = new ListNode(-1, head);
+
+    ListNode *leftleft = headNull;
+    ListNode *left=headNull->next, *right=left; // 必须[left, right)
+    int count = 0;
+    while(right!=NULL) {
+        right=right->next;
+        count++;
+
+        if(count==k) {
+            // [left, right) 翻转；
+            // leftleft -> left -> ... -> lastright -> right
+            // head insert
+            ListNode *p = left;
+            while(p!=right) {
+                // p in [left, right), left其实不用插入，可以优化；
+                ListNode *temp = leftleft-> next;
+                leftleft-> next = p;
+                p = p->next;
+                leftleft->next->next = temp;
+            }
+            // leftleft -> lastright -> ... -> left, right
+            left->next = right;
+            // leftleft -> lastright -> ... -> left -> right
+
+            // 迭代
+            leftleft = left;
+            right = left = left->next;
+            count=0;
+        }
+    }
+
+    head = headNull->next;
+    delete headNull;
+    return head;
+}
+
 // 142. 环形链表II
 // Floyd判圈法，快慢指针
 bool hasCycle(ListNode *head) {
@@ -237,6 +282,16 @@ int main()
     printList(list3);
     deleteList(list3);
 
+    cout<< "K个一组翻转链表"<<endl;
+    list1 = vector2List({1,2,3,4,5});
+    list1 = reverseKGroup(list1, 2);
+    printList(list1);
+    deleteList(list1);
+    
+    list1 = vector2List({1,2,3,4,5,6,7,8,9,10});
+    list1 = reverseKGroup(list1, 3);
+    printList(list1);
+    deleteList(list1);
     
     cout<<"两个链表的第一个公共节点"<<endl;
     pair<ListNode*, ListNode*> twoList = buildListHasIntersectionNode({4,1}, {5,0,1}, {8,4,5});

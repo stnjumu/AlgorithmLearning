@@ -984,6 +984,44 @@ int maxProductDP(vector<int>& nums) {
     return ans;
 }
 
+// ! 300. 最长递增子序列
+// 思路1：dp， dp[i]表示nums[0, i]中以nums[i]为结尾的最长递增子序列长度
+// dp[i]=max_j(dp[j] + 1, if nums[i]>nums[j]
+//             1, others), j<i;
+// dp[0]=1;
+// O(n^2), O(n)，击败20%, 10%
+int lengthOfLIS(vector<int>& nums) {
+    vector<int> dp(nums.size(), 1);
+    for(int i=1;i<nums.size();++i) {
+        for(int j=0;j<i;j++) {
+            if(nums[i]>nums[j])
+                dp[i]=max(dp[i], dp[j]+1); // 用max函数不如if判断快；
+        }
+    }
+    return *max_element(dp.begin(), dp.end());
+}
+// ! 思路2：O(nlogn); 遍历nums[0,n), dp[i]表示中所有长度为i的递增子序列的最后一个元素的最小值；
+// 引入了一些贪心的思想，想让这个递增子序列的每个位置元素增长的尽可能慢；
+// 维护方法，已遍历了nums[0,j-1]，则当前dp中dp[i]存了nums[0,j-1]的所有长度为i的递增子序列的最后一个元素的最小值；
+// 遍历nums[j]时，只需要用nums[j]替换dp中第一个大于等于nums[j]的元素即可，如果没有大于等于nums[j]的元素，则插入到尾部；
+// 最后dp的长度即为所求；
+// 击败99%, 69%
+int lengthOfLIS_Onlogn(vector<int>& nums) {
+    vector<int> dp;
+    dp.push_back(nums[0]);
+    for(int i=1;i<nums.size();i++) {
+        if(dp.back() < nums[i])
+            dp.push_back(nums[i]);
+        else {
+            // find first pos, dp[pos]>=nums[i]
+            auto it = lower_bound(dp.begin(), dp.end(), nums[i]);
+            assert(it!=dp.end());
+            *it = nums[i];
+        }
+    }
+    return dp.size();
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -1171,6 +1209,10 @@ int main()
     cout<< maxProductDP(nums)<<endl;
     nums.assign({-4, -3, -2});
     cout<< maxProductDP(nums)<<endl;
+
+    cout<<"最长递增子序列"<<endl;
+    nums.assign({10,9,2,5,3,7,101,18});
+    cout<<lengthOfLIS_Onlogn(nums)<<endl;
 
     return 0;
 }
