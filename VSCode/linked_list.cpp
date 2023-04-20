@@ -245,6 +245,8 @@ ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
     return pa;
 }
 
+// 148. 排序链表
+// 思路1：使用O(n)的空间存放指针，借用sort排序；击败68%, 67%;
 ListNode* sortList(ListNode* head) {
     if(head==NULL || head->next==NULL)
         return head;
@@ -265,6 +267,115 @@ ListNode* sortList(ListNode* head) {
     }
     numPointer.back()->next=NULL;
     return numPointer[0];
+}
+// 思路2：原地归并排序；利用21. 合并两个有序链表代码
+// for len in [2, 4, 8, ..., x], x<list.len: 每len个长度合并一下(merge)
+// 即自底向上的归并排序，不需要额外空间, O(nlogn), O(1), 击败12%, 50%，反而更慢了，空间更大了；
+pair<ListNode*, ListNode* > mergeTwoListsAndReturnHeadTail(ListNode* list1, ListNode* list2) {
+    ListNode* head=new ListNode(-1);
+    ListNode *tail =head;
+    while (list1!=NULL && list2!=NULL)
+    {
+        if (list1->val < list2->val)
+        {
+            tail = tail->next = list1;
+            list1 = list1->next;
+        }
+        else {
+            tail = tail->next = list2;
+            list2 = list2->next;
+        }
+    }
+    tail->next = list1==NULL ? list2 : list1;
+    while(tail->next!=NULL) { // 需要返回tail节点
+        tail=tail->next;
+    }
+
+    list1 = head -> next;
+    delete head;
+    return {list1, tail};
+}
+ListNode* sortList_SpaceO1(ListNode* head) {
+    int listLen = getListSize(head);
+    ListNode *headNULL = new ListNode(-1, head); // 空头节点，简化操作
+    int len = 1;
+    while(len < listLen) {
+        ListNode* lastLeft = headNULL;
+        ListNode* left = headNULL->next;
+        ListNode* right = headNULL->next;
+        ListNode* lastRight= headNULL;
+
+        while(left!=NULL) {
+            // 构造从left出发，要合并的两个链表, left和right, 注意设置list1和list2最后的一个节点的next = NULL;
+            int i = len;
+            while(i>0 && right!=NULL) {
+                lastRight = right;
+                right=right->next;
+                i--;
+            }
+            if(right != NULL) {
+                // 存在两个链表
+                lastRight -> next = NULL; // list1: [left, right)
+
+                ListNode *rightBack = right; // list2: [right, rightBack]
+                ListNode *rightEnd = NULL; // 或list2: [right, rightEnd)
+                i = len-1; // 从right要到rightBack, 即list2的最后一个节点；需要走len-1步；
+                while(i>0 && rightBack!=NULL) {
+                    rightBack = rightBack->next;
+                    i--;
+                }
+                // rightBack==NULL, 说明list2长度不够len，没有下一次迭代了，且末尾是NULL，不需特殊处理；
+                if(rightBack!=NULL) {
+                    rightEnd = rightBack->next; // 为下一次迭代做准备；
+                    rightBack->next=NULL; // list2: [right, rightEnd)
+                }
+                
+                auto headTail = mergeTwoListsAndReturnHeadTail(left, right); // 注意名字中虽然有空头节点，但此函数输入不需要空头节点
+                // 连接前后
+                lastLeft -> next = headTail.first;
+                headTail.second->next = rightEnd;
+
+                // 迭代
+                lastLeft = lastRight= headTail.second; // 注意不是rightBack, 因为merge操作会改变其顺序；
+                left= right =rightEnd;
+            }
+            else {
+                // 只剩一个待合并的链表left了；
+                break; // ! 没有这句会死循环；
+            }
+        }
+
+        // 迭代
+        len *=2;
+    }
+
+    head = headNULL->next;
+    delete headNULL;
+    return head;
+}
+
+// 160. 相交链表
+// 击败68%， 30%
+ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+    int len1 = getListSize(headA);
+    int len2 = getListSize(headB);
+    if(len2<len1) {
+        swap(len1,len2);
+        swap(headA, headB);
+    }
+
+    // len1 <= len2
+    int len = len2-len1; // 长的链表先走几步；之后一起走，如果相交两者会相遇；
+    // B先走len步
+    while(len>0) {
+        len--;
+        headB=headB->next;
+    }
+    while(headA!=headB) {
+        headA=headA->next;
+        headB=headB->next;
+    }
+    return headA;
 }
 
 int main()
@@ -305,6 +416,12 @@ int main()
     cout<<"排序链表"<<endl;
     list1 = vector2List({4,2,1,3});
     list1 = sortList(list1);
+    printList(list1);
+    deleteList(list1);
+
+    cout<<"排序链表-O(1)空间"<<endl;
+    list1 = vector2List({-1,5,3,4,0});
+    list1 = sortList_SpaceO1(list1);
     printList(list1);
     deleteList(list1);
 
