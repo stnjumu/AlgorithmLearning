@@ -2,6 +2,7 @@
 
 #include<iostream>
 #include<vector>
+#include <iterator>
 // #include<VECTOR> // Window下C++头文件对大小写不敏感；
 using namespace std;
 
@@ -27,6 +28,13 @@ void printVector(vector<T> nums, string name = "vector") {
     cout<<name<<" = ";
     for(auto n:nums)
         cout<<n<<" ";
+    cout<<endl;
+}
+template<class T>
+void printVectorOstreamIterator(vector<T> nums, string name = "vector") {
+    cout<<name<<" = ";
+    ostream_iterator<T> output_it(cout, " "); // 绑定cout到输出流的迭代器，每迭代一次会额外写入一个" "字符串；
+    copy(nums.begin(), nums.end(), output_it); // 比上面printVector麻烦很多，只是看起来高级；
     cout<<endl;
 }
 template<class T>

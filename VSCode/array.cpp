@@ -1022,6 +1022,23 @@ int lengthOfLIS_Onlogn(vector<int>& nums) {
     return dp.size();
 }
 
+// ! linear select, 线性时间选择；
+// 215. 数组中的第K个最大元素；
+int findRangeKthLargest(vector<int> &nums, int start, int end, int k) {
+    int pivot = nums[start];
+    auto it = partition(nums.begin(), nums.end(), [=](int x){
+        return x>=pivot;
+    });
+}
+int findKthLargest(vector<int>& nums, int k) {
+    int pivot = nums[0];
+    auto it = partition(nums.begin(), nums.end(), [=](int x){
+        return x<pivot;
+    });
+    printVector(nums);
+    return 0;
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -1213,6 +1230,10 @@ int main()
     cout<<"最长递增子序列"<<endl;
     nums.assign({10,9,2,5,3,7,101,18});
     cout<<lengthOfLIS_Onlogn(nums)<<endl;
+
+    cout<<"数组中的第K个最大元素"<<endl;
+    nums.assign({3,2,1,5,6,4});
+    cout<<findKthLargest(nums, 2)<<endl;
 
     return 0;
 }
