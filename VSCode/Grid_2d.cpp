@@ -205,6 +205,50 @@ int maximalRectangle(vector<vector<char>>& matrix) {
 // 复杂度：每行O(n)，共m行，O(mn)；
 // TODO: 代码
 
+// 221. 最大正方形, 85. 最大矩形变体，改成正方形；
+// 思路1：类似85.的遍历法+优化，O(mn^2)或O(m^2 n)
+// 思路2：dp, 正方形刚好可以递推; 
+// ! 长方形不能递推，是因为面积a*b，有两个变量，这两个变量递推并不能保证构成新长方形, 且最大长方形面积可能对应多组{a,b}对
+// dp[i,i]表示以点[i,j]为右下端点的正方形的最大边长；
+// dp[i,i]= 0, if matrix[i][j]=='0'
+//          min(dp[i-1, i-1], dp[i-1,i], dp[i,i-1])+1, if matrix[i][j]=='1'
+// dp[0, i] = matrix[0][i]=='1', dp[i, 0] = matrix[i][0]=='1'
+// O(mn), O(mn)击败98%, 5%
+// TODO: 可选优化：空间可优化成O(min(m,n)); n>m则转置一下，然后一行行递推；需要特别处理下每行第一个元素；
+int maximalSquare(vector<vector<char>>& matrix) {
+    int m=matrix.size(), n = matrix[0].size(); // m, n >= 1
+    vector<vector<int>> dp(m, vector<int>(n));
+    int ans = 0;
+
+    for(int i=0;i<m;++i) {
+        dp[i][0]= matrix[i][0]=='1';
+        if(dp[i][0]>ans) ans = dp[i][0];
+    }
+    for(int j=0;j<n;++j) { // ! n错写成m，小心!
+        dp[0][j]= matrix[0][j]=='1';
+        if(dp[0][j]>ans) ans = dp[0][j];
+    }
+
+    for(int i=1;i<m;++i) {
+        for(int j=1;j<n;++j) {
+            if(matrix[i][j]=='0') {
+                dp[i][j]=0;
+            }
+            else {
+                dp[i][j]= min(dp[i-1][j-1], min(dp[i-1][j], dp[i][j-1])) +1; // ! dp[i-1][j-1]写成dp[i-1][i-1]，小心!
+                if(dp[i][j]>ans) ans = dp[i][j];
+            }
+        }
+    }
+    return ans*ans;
+}
+
+// 240. 搜索二维矩阵 II
+bool searchMatrix(vector<vector<int>>& matrix, int target) {
+    // Matrix在每行升序，每列升序；
+    
+}
+
 int main() {
     cout<<"方向数组示例"<<endl;
     printNextPositions4(0,0,3,3);
@@ -233,6 +277,12 @@ int main() {
     cout<<"最大矩形"<<endl;
     vector<vector<char>> matrix{{'1','0','1','0','0'},{'1','0','1','1','1'},{'1','1','1','1','1'},{'1','0','0','1','0'}};
     cout<< maximalRectangle(matrix)<<endl;
+
+    cout<<"最大正方形"<<endl;
+    cout<< maximalSquare(matrix)<<endl;
+
+    matrix.assign({{'0','1'},{'1','0'}});
+    cout<< maximalSquare(matrix)<<endl;
 
     return 0;
 }

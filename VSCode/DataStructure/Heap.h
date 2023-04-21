@@ -9,23 +9,28 @@ using namespace std;
 
 void test_heap_algo() {
     vector<int> v = { 3, 5, 2, 6, 8, 1, 0, 4 };
-    make_heap(v.begin(), v.end());
+    make_heap(v.begin(), v.end()); // ! O(n)时间插入构造堆；将任意数组构造成堆结构；
+    // 注：坐标从0开始，则父i的两个孩子是2i+1, 2i+2; 孩子i的父亲是(i-1)/2
+    // 坐标从1开始，则父i的两个孩子是2i, 2i+1；孩子i的父亲是i/2
+    // * 简单记忆方法，父->子要乘2，子->父要/2；
+    // * 0-1-2，满足i->2i+1->2i+2; 2i+1和2i+2要得到i则是减一后除以2；
+    // * 1-2-3，满足i->2i->2i+1; 2i和2i+1要得到i则刚好是除以2；
     cout << "Heap: ";
     for (auto i : v) cout << i << " ";
     cout << endl;
 
     v.push_back(7);
-    push_heap(v.begin(), v.end()); // 除最后一个元素外是一个堆结构，将最后一个元素插入后修复堆；
+    push_heap(v.begin(), v.end()); // ! 输入v需满足：除最后一个元素外是一个堆结构，返回将最后一个元素插入后的堆结构；O(logn)，称为尾插入上浮操作；
     cout << "Heap after push: ";
     for (auto i : v) cout << i << " ";
     cout << endl;
 
-    pop_heap(v.begin(), v.end()); // 将第一个元素和最后一个元素交换位置，则前n-1个值只有第一个节点不满足堆结构，此函数会将前n-1个数修复成堆；
+    pop_heap(v.begin(), v.end()); // ! 输入v是堆结构，输出是将第一个元素和最后一个元素交换位置，再让前n-1个值满足堆结构。O(logn), 称为头删除下沉操作；
     cout << "Heap after pop: ";
     for (auto i : v) cout << i << " ";
     cout << endl;
 
-    sort_heap(v.begin(), v.end()); // 堆排序；
+    sort_heap(v.begin(), v.end()); // ! 堆排序；输入v必须是堆结构，即需要提前make_heap; 输入是有序数组，大顶堆对应递增序列，小顶堆对应递减序列；
     cout << "Sorted array: ";
     for (auto i : v) cout << i << " ";
     cout << endl;

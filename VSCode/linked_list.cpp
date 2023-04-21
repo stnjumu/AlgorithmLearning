@@ -74,6 +74,7 @@ ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
 
 // 206. 反转链表
 // 空头节点，头插法，击败7%, 40%
+// 注意头插法对指针的操作次数是迭代版本的2倍；
 ListNode* reverseList(ListNode* head) {
     ListNode *headNull = new ListNode(-1);
 
@@ -91,7 +92,7 @@ ListNode* reverseList(ListNode* head) {
     return head;
 }
 // 迭代版本，两个指针即可；击败93%, 78%
-ListNode* reverseList(ListNode* head) {
+ListNode* reverseListIter(ListNode* head) {
     ListNode *prev = NULL;
 
     while(head!=NULL) {
@@ -124,7 +125,8 @@ ListNode* reverseKGroup(ListNode* head, int k) {
         if(count==k) {
             // [left, right) 翻转；
             // leftleft -> left -> ... -> lastright -> right
-            // head insert
+            // 法1：head insert
+            // TODO: 法2：迭代版本的链表翻转，利用reverseListIter;
             ListNode *p = left;
             while(p!=right) {
                 // p in [left, right), left其实不用插入，可以优化；
@@ -214,7 +216,8 @@ ListNode *detectCycle(ListNode *head) {
     return slow;
 }
 
-// 160. 两个链表的第一个公共节点
+// 160. 相交链表/两个链表的第一个公共节点
+// 击败68%， 30%
 pair<ListNode*, ListNode*> buildListHasIntersectionNode(vector<int> a1, vector<int> b1, vector<int> shared_tail) {
     if(shared_tail.empty()) {
         return {vector2List(a1), vector2List(b1)};
@@ -248,33 +251,25 @@ void deleteListHasIntersectionNode(ListNode* lista, ListNode* listb, ListNode* f
     deleteList(listb);
 }
 ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
-    if(headA == NULL || headB == NULL)
-        return NULL;
-    int lenA=0, lenB=0;
-    ListNode *pa = headA, *pb = headB;
-    while(pa!=NULL) {
-        pa = pa->next;
-        lenA++;
-    }
-    while(pb!=NULL) {
-        pb = pb->next;
-        lenB++;
-    }
-    if(lenA<lenB) {
-        swap(lenA, lenB);
+    int len1 = getListSize(headA);
+    int len2 = getListSize(headB);
+    if(len2<len1) {
+        swap(len1,len2);
         swap(headA, headB);
     }
-    // headA更长；
-    pa = headA;
-    pb = headB;
-    for(int i=0;i<lenA-lenB;i++)
-        pa = pa->next; // pa将listA长的几步先走了；
-    while (pa != pb)
-    {
-        pa = pa->next;
-        pb = pb->next;
+
+    // len1 <= len2
+    int len = len2-len1; // 长的链表先走几步；之后一起走，如果相交两者会相遇；
+    // B先走len步
+    while(len>0) {
+        len--;
+        headB=headB->next;
     }
-    return pa;
+    while(headA!=headB) {
+        headA=headA->next;
+        headB=headB->next;
+    }
+    return headA;
 }
 
 // 148. 排序链表
@@ -386,28 +381,48 @@ ListNode* sortList_SpaceO1(ListNode* head) {
     return head;
 }
 
-// 160. 相交链表
-// 击败68%， 30%
-ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
-    int len1 = getListSize(headA);
-    int len2 = getListSize(headB);
-    if(len2<len1) {
-        swap(len1,len2);
-        swap(headA, headB);
+// 234. 回文链表
+// O(n),O(1)的做法：先遍历一次得len, len%2==0: 反转后半个链表，然后进行比较；len%2==1: 翻转后len/2个节点，然后仅比较前len/2个节点；两种情况可合并；
+// 优化：利用fast, slow指针，fast指向NULL时，slow刚好走过ceil(len/2.0)步，刚好指向节点及之后共len/2个节点；
+// 击败53%, 58%
+bool isPalindrome(ListNode* head) {
+    ListNode *slow = head;
+    ListNode *fast = head;
+    ListNode *lastslow = NULL;
+    int len=0;
+    while(fast!=NULL) {
+        fast=fast->next;
+        len++;
+        if(fast!=NULL) {
+            fast=fast->next;
+            len++;
+        }
+        lastslow = slow;
+        slow = slow->next;
     }
+    // fast指向NULL时，slow刚好指向节点及之后刚好有len/2个；
+    // 断开两链表
+    lastslow->next=NULL;
 
-    // len1 <= len2
-    int len = len2-len1; // 长的链表先走几步；之后一起走，如果相交两者会相遇；
-    // B先走len步
+    // 翻转slow链表
+    slow = reverseListIter(slow);
+
+    // 连上两链表，为了以后回收空间
+    lastslow->next=slow;
+
+    // 判断前后两部分链表的前len/2个元素相同；
+    // len为奇数时刚好不会判断中间元素；
+    fast=head; // 只是为了节省空间，下面的fast也是每次走一步；
+    len/=2;
     while(len>0) {
-        len--;
-        headB=headB->next;
+        assert(slow!=NULL && fast!=NULL);
+        if(slow->val!=fast->val)
+            return false;
+        slow = slow->next;
+        fast = fast->next;
+        len--; // ! 又忘写了!
     }
-    while(headA!=headB) {
-        headA=headA->next;
-        headB=headB->next;
-    }
-    return headA;
+    return true;
 }
 
 int main()
@@ -456,6 +471,14 @@ int main()
     list1 = sortList_SpaceO1(list1);
     printList(list1);
     deleteList(list1);
+
+    cout<<"回文链表"<<endl;
+    list1 = vector2List({1,2,2,1});
+    printList(list1);
+    cout<<isPalindrome(list1)<<endl;
+    printList(list1);
+    deleteList(list1);
+
 
     return 0;
 }

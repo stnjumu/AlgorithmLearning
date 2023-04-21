@@ -1024,19 +1024,84 @@ int lengthOfLIS_Onlogn(vector<int>& nums) {
 
 // ! linear select, 线性时间选择；
 // 215. 数组中的第K个最大元素；
-int findRangeKthLargest(vector<int> &nums, int start, int end, int k) {
+// 思路1：partition，平均复杂度O(n),空间O(logn)，证明见算法导论9.2, 击败76%, 39%
+// 可选：找第k(从1开始)大元素等价于第n-k(从0开始)小元素或第n-k+1(从1开始)小元素；
+int myPartition(vector<int> &nums, int start, int end) {
+    // 至少3个数；
+    // 以pivot = nums[start]划分, left pivot right;
+    // left全部>pivot, right全部<=pivot
+    // 返回值为left.size, 即>pivot的个数；
     int pivot = nums[start];
-    auto it = partition(nums.begin(), nums.end(), [=](int x){
-        return x>=pivot;
+    auto it = partition(nums.begin()+start+1, nums.begin()+end, [=](int x){
+        return x>pivot;
     });
+    // 前面>pivot; 后面<=pivot
+    
+    int lessCount = (it-nums.begin())-start-1;
+    // swap pivot和it-1的元素；
+    swap(nums[start], nums[start+lessCount]);
+    return lessCount;
+}
+int findRangeKthLargest(vector<int> &nums, int start, int end, int k) {
+    // 递归出口
+    if(end-start<=2) { // 少于等于2个数，则可直接返回
+        if(end-start == 1) {
+            assert(k==1);
+            return nums[start];
+        }
+        else {
+            assert(k==1||k==2);
+            if(k==1) {
+                return max(nums[start], nums[start+1]);
+            }
+            else {
+                return min(nums[start], nums[start+1]);
+            }
+        }
+    }
+
+    int greaterCount = myPartition(nums, start, end);
+    // greater pivot less
+    if(k<=greaterCount) {
+        // 第k大在[start, start+greaterCount)
+        return findRangeKthLargest(nums, start, start+greaterCount, k);
+    }
+    else if(k==greaterCount+1) {
+        // 第k大刚好是pivot
+        return nums[start+greaterCount];
+    }
+    else { // k>greaterCount+1
+        // 第k大在[start+greaterCount+1, end)
+        return findRangeKthLargest(nums, start+greaterCount+1, end, k-greaterCount-1); // ! 之前忘+1了；
+    }
 }
 int findKthLargest(vector<int>& nums, int k) {
-    int pivot = nums[0];
-    auto it = partition(nums.begin(), nums.end(), [=](int x){
-        return x<pivot;
-    });
-    printVector(nums);
-    return 0;
+    return findRangeKthLargest(nums, 0, nums.size(), k);
+}
+// 思路2：大小为k的大根堆，O(nlogk), 空间O(logk)
+// 思路3：基于堆排序，建大顶堆O(n), k-1次pop，O(klogn)， 总共O(n+klogn)
+
+// 238. 除自身以外数组的乘积 (不使用除法)
+// 思路：前缀积和后缀积相乘即结果
+// 优化：由于每个前缀积和后缀积都只会使用一次，所以可优化到空间为O(1);
+// 击败98%, 87%
+vector<int> productExceptSelf(vector<int>& nums) {
+    // 题目保证乘法不会溢出
+    int n= nums.size();
+    vector<int> ans(n,1);
+    // 先给ans乘上前缀积
+    int prod = 1;
+    for(int i=0;i<n-1;++i) {
+        prod *= nums[i];
+        ans[i+1]=prod;
+    }
+    // 再乘后缀积
+    prod = 1;
+    for(int i=n-1;i>0;--i) {
+        prod *= nums[i];
+        ans[i-1]*=prod;
+    }
+    return ans;
 }
 
 int main()
@@ -1234,6 +1299,14 @@ int main()
     cout<<"数组中的第K个最大元素"<<endl;
     nums.assign({3,2,1,5,6,4});
     cout<<findKthLargest(nums, 2)<<endl;
+    nums.assign({7,6,5,4,3,2,1});
+    cout<<findKthLargest(nums, 2)<<endl;
+
+    cout<<"除自身以外数组的乘积"<<endl;
+    nums.assign({1,2,3,4});
+    printVector(productExceptSelf(nums));
+    nums.assign({-1,1,0,-3,3});
+    printVector(productExceptSelf(nums));
 
     return 0;
 }

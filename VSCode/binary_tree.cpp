@@ -310,6 +310,50 @@ int maxPathSum3(TreeNode* root) {
     return ans_maxPathSum;
 }
 
+// 226. 翻转二叉树
+// 递归，击败100%, 13%
+TreeNode* invertTree(TreeNode* root) {
+    if(root) {
+        root->left = invertTree(root->left);
+        root->right = invertTree(root->right);
+        swap(root->left, root->right);
+    }
+    return root;
+}
+
+// 236. 二叉树的最近公共祖先
+// 思路：DFS判断节点所在子树中是否有P和Q，后序第一个同时有P,Q的节点就是解；
+// 击败68%, 15%
+// 可选优化，将pair<hasP, hasQ> 优化成一个即可，因为需要的只是hasP&&hasQ;
+TreeNode* ansLowestCommonAncestor;
+pair<bool, bool> DFSHasPQ(TreeNode* root, TreeNode* p, TreeNode* q) {
+    if(root == NULL)
+        return {false, false};
+    bool hasP=false, hasQ=false;
+    pair<bool, bool> hasPQ = DFSHasPQ(root->left, p, q);
+    hasP = hasPQ.first;
+    hasQ = hasPQ.second;
+    hasPQ = DFSHasPQ(root->right, p, q);
+    hasP = hasP || hasPQ.first;
+    hasQ = hasQ || hasPQ.second;
+
+    if(root == p)
+        hasP = true;
+    if(root == q)
+        hasQ = true;
+
+    // DFS后序中的第一个同时满足hasP == hasQ == true的节点就是解
+    if(ansLowestCommonAncestor == NULL && hasP && hasQ)
+        ansLowestCommonAncestor = root;
+    
+    return {hasP, hasQ};
+}
+TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+    ansLowestCommonAncestor = NULL;
+    DFSHasPQ(root, p, q);
+    return ansLowestCommonAncestor;
+}
+
 int main() {
     TreeNode * root = vectorIntLayerOrder2BinaryTree({3,9, 20, -1, -1, 15, 7});
     printInOrder(root);
@@ -401,6 +445,11 @@ int main() {
     cout<<maxPathSum3(root)<<endl;
     deleteBinaryTree(root);
 
+    root = vectorIntLayerOrder2BinaryTree({3,5,1,6,2,0,8,-1,-1,7,4});
+    printLevelOrder(root, true);
+    cout<< lowestCommonAncestor(root, root->left, root->right)->val<<endl; // 5, 1的最近祖先为3
+    cout<< lowestCommonAncestor(root, root->left, root->left->right->right)->val<<endl; // 5, 4的最近祖先是5
+    deleteBinaryTree(root);
 
     return 0;
 }
