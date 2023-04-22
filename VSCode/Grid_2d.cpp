@@ -244,10 +244,66 @@ int maximalSquare(vector<vector<char>>& matrix) {
 }
 
 // 240. 搜索二维矩阵 II
+// 思路1: 二分查找，T(mn) = 3T(mn/4)+O(1), 根据主定理，T(mn) in O(n^(log_4 3)), 略小于O(mn), 击败10%, 16%
+bool binarySearchMatrix(vector<vector<int>>& matrix, int target, int up, int down, int left, int right) {
+    // 递归出口
+    assert(up<=down && left<=right);
+    if(up == down || left == right) {
+        return false;
+    }
+    
+    // 二分法
+    int midx=(up+down)/2; // if up < down, then up <= midx < down
+    int midy=(left+right)/2; // if left < right, then left <= midy < right
+    if(matrix[midx][midy]==target) {
+        cout<< "Found at (i, j) = (" << midx <<", "<<midy<<")"<<endl;
+        return true;
+    }
+    else if(matrix[midx][midy]>target) {
+        // 右下角>= matrix[midx][midy]>target, 不是解
+        // 在 左上角 || 右上角 || 左下角
+        // ! 二维情况请仔细画图，这些边界很容易搞错；
+        return binarySearchMatrix(matrix, target, up, midx, left, midy) || 
+                binarySearchMatrix(matrix, target, up, midx, midy, right) ||
+                binarySearchMatrix(matrix, target, midx, down, left, midy);
+    }
+    else {
+        // 左上角<= matrix[midx][midy]<target，不是解
+        // 在 右下角 || 右上角 || 左下角
+        // ! 注意和上面一种情况的右上角 || 左下角有一点区别，请画图仔细观察；
+        return binarySearchMatrix(matrix, target, midx+1, down, midy+1, right) ||
+                binarySearchMatrix(matrix, target, up, midx+1, midy+1, right) ||
+                binarySearchMatrix(matrix, target, midx+1, down, left, midy+1);
+    }
+}
 bool searchMatrix(vector<vector<int>>& matrix, int target) {
     // Matrix在每行升序，每列升序；
-    
+    return binarySearchMatrix(matrix, target, 0, matrix.size(), 0, matrix[0].size());
 }
+// 思路2：Z字形查找
+// * 从矩阵的右上角到左下角这条次对角线上，从右上角开始，if matrix[x][y]>target，则可以排除y列，如果<target，则可以排除x行；
+// 也就是每次判断排除一行或一列，O(m+n)时间即可；击败61%, 14%
+bool searchMatrixOmPlusn(vector<vector<int>>& matrix, int target) {
+    // Matrix在每行升序，每列升序；
+    int m = matrix.size(), n = matrix[0].size();
+    int x= 0, y=n-1;
+    while(x<m && y>=0) {
+        if(matrix[x][y]==target) {
+            return true;
+        }
+        else if(matrix[x][y]>target) {
+            y--;
+        }
+        else {
+            x++;
+        }
+    }
+    return false;
+}
+// ! 类似题型：1351. 统计有序矩阵中的负数；
+
+
+
 
 int main() {
     cout<<"方向数组示例"<<endl;
@@ -283,6 +339,13 @@ int main() {
 
     matrix.assign({{'0','1'},{'1','0'}});
     cout<< maximalSquare(matrix)<<endl;
+
+    cout<<"搜索二维矩阵II"<<endl;
+    vector<vector<int>> intMatrix{{1,4,7,11,15},{2,5,8,12,19},{3,6,9,16,22},{10,13,14,17,24},{18,21,23,26,30}};
+    cout<<searchMatrix(intMatrix, 5)<<endl;
+    cout<<searchMatrix(intMatrix, 15)<<endl;
+    cout<<searchMatrix(intMatrix, 20)<<endl;
+    cout<<searchMatrix(intMatrix, 30)<<endl;
 
     return 0;
 }

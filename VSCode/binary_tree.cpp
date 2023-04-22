@@ -354,6 +354,29 @@ TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
     return ansLowestCommonAncestor;
 }
 
+// 337. 打家劫舍III
+// 击败99%, 85%
+pair<int, int> robSubtree(TreeNode* root) {
+    // 递归出口
+    if(root==NULL) {
+        return {0,0};
+    }
+
+    pair<int, int> maxLeftRobOrNot = robSubtree(root->left);
+    pair<int, int> maxRightRobOrNot = robSubtree(root->right);
+    pair<int, int> maxRootRobOrNot; // first表示偷root, second表示不偷root;
+    // 偷root, 则不偷两个孩子；
+    maxRootRobOrNot.first = maxLeftRobOrNot.second + maxRightRobOrNot.second + root->val;
+    // 不偷root, 则可偷可不偷孩子；
+    // ! 注意不一定两个孩子都偷是最大的；
+    maxRootRobOrNot.second = max(maxLeftRobOrNot.first, maxLeftRobOrNot.second) + max(maxRightRobOrNot.first, maxRightRobOrNot.second);
+    return maxRootRobOrNot;
+}
+int rob(TreeNode* root) {
+    pair<int, int> maxRootRobOrNot = robSubtree(root);
+    return max(maxRootRobOrNot.first, maxRootRobOrNot.second);
+}
+
 int main() {
     TreeNode * root = vectorIntLayerOrder2BinaryTree({3,9, 20, -1, -1, 15, 7});
     printInOrder(root);
@@ -449,6 +472,24 @@ int main() {
     printLevelOrder(root, true);
     cout<< lowestCommonAncestor(root, root->left, root->right)->val<<endl; // 5, 1的最近祖先为3
     cout<< lowestCommonAncestor(root, root->left, root->left->right->right)->val<<endl; // 5, 4的最近祖先是5
+    deleteBinaryTree(root);
+
+    cout<<"二叉树的序列化和反序列化"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({1,2,3,-1,-1,4,5});
+    BinaryTreeCodec btcc;
+    string ser = btcc.serialize(root);
+    cout<<"序列化后: "<< ser<<endl;
+    TreeNode *newRoot = btcc.deserialize(ser);
+    printLevelOrderWithNullNum(newRoot, true, btcc.nullNum);
+    deleteBinaryTree(root);
+    deleteBinaryTree(newRoot);
+
+    cout<<"打家劫舍III"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({3,2,3,-1,3,-1,1});
+    cout<< rob(root)<<endl;
+    deleteBinaryTree(root);
+    root = vectorIntLayerOrder2BinaryTree({3,4,5,1,3,-1,1});
+    cout<< rob(root)<<endl;
     deleteBinaryTree(root);
 
     return 0;

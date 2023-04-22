@@ -1104,6 +1104,227 @@ vector<int> productExceptSelf(vector<int>& nums) {
     return ans;
 }
 
+// 279. 完全平方数
+// 思路1：类背包问题的递归解法，击败14%, 5%
+// 可选优化，代码可以写的更简洁
+int getDPn_backtrace(vector<int> &squares, vector<int> &dp, int n) {
+    if(dp[n]!=0) return dp[n];
+
+    int dpn = 10001;
+    for(auto square: squares) {
+        if(n-square>=1)
+            dpn = min(dpn, getDPn_backtrace(squares, dp, n-square));
+    }
+    dp[n]=dpn+1;
+    return dpn+1;
+}
+int numSquares(int n) {
+    // get all Squares <=n
+    vector<int> squares;
+    const int N = 10001;
+    vector<int> dp(N, 0);
+
+    int i=1;
+    while(i*i<=n) {
+        dp[i*i]=1;
+        squares.push_back(i*i);
+        i++;
+        if(i*i==n) {
+            return 1;
+        }
+    }
+
+    return getDPn_backtrace(squares, dp, n);
+}
+// 思路2：dp
+// O(n*sqrt(n))，因为每个数会遍历所有小于n的完全平方数，sqrt(n)个，击败40%, 10%.
+int numSquaresDP(int n) {
+    // get all Squares <=n
+    // dp[i]表示i需要的平方数个数的最小值；
+    // dp[i] = min_j(dp[i-j])+1, j是平方数，且j<i
+    vector<int> squares;
+    const int N = 10001;
+    vector<int> dp(n+1, 0);
+
+    int i=1;
+    while(i*i<=n) {
+        dp[i*i]=1;
+        squares.push_back(i*i);
+        i++;
+        if(i*i==n) {
+            return 1;
+        }
+    }
+
+    // dp
+    for(int i=1;i<=n;++i) {
+        if(dp[i]!=1) { // 不是完全平方数；
+            int minNum = 10001;
+            for(int j=0;j<squares.size();++j) {
+                if(squares[j]>i)
+                    break;
+                minNum = min(minNum, dp[i-squares[j]]);
+            }
+            dp[i]=minNum+1;
+        }
+    }
+    return dp[n];
+}
+// 思路3：数学定理，所有正整数都可以表示成不超过4个正整数平方和的形式，详见https://leetcode.cn/problems/perfect-squares/solution/wan-quan-ping-fang-shu-by-leetcode-solut-t99c/
+
+// 283. 移动零
+// 双指针，击败98%, 5%
+void moveZeroes(vector<int>& nums) {
+    int left=0, right=0;
+    while(right<nums.size()) {
+        if(nums[right]!=0) {
+            swap(nums[left], nums[right]);
+            ++left;
+        }
+
+        ++right;
+    }
+}
+
+// 312. 戳气球
+// 贪心法不对，反例1,2,3,4,5, 正确答案：110
+// dp, dp[i,j]表示剩下nums[i,j]，这些气球能得到的最大硬币数量；
+// dp[i,i]= nums[i];
+// dp[i,j]= max_k{ dp[i,k-1]+dp[k+1, j]+nums[i]*(1或nums[]) }
+// TODO: 
+int maxCoins(vector<int>& nums) {
+    // dp
+    cout<<"TODO"<<endl;
+    return 0;
+}
+
+// ! 322. 零钱兑换
+// 回溯法
+int minCountCoinChange;
+vector<int> minCountOfAmounts;
+// 思路1：加上简单剪枝的回溯, 时间超限
+void backtrace_coinChange1(vector<int> &coins, int amount, int count) {
+    if(amount==0) { // ans
+        minCountCoinChange = min(minCountCoinChange, count);
+        return;
+    }
+    if(count>=minCountCoinChange) {// 剪枝
+        return;
+    }
+    
+    for(int coin: coins) {
+        if(amount>=coin) {
+            backtrace_coinChange1(coins, amount-coin, count+1);
+        }
+    }
+}
+int coinChange1(vector<int>& coins, int amount) {
+    minCountCoinChange = 10001;
+    sort(coins.begin(), coins.end(), greater<int>());
+    backtrace_coinChange1(coins, amount, 0);
+    return minCountCoinChange<10001? minCountCoinChange : -1;
+}
+// 思路2：记忆化搜索, 超时；我只记忆了有解子问题；
+int backtrace_coinChange2(vector<int> &coins, int amount) {
+    // 返回兑换amount需要最小零钱数或10001，10001表示兑换amount需要的最小零钱数超过了当前解；
+    if(amount==0) { // ans
+        return 0; // 不需要兑换0
+    }
+    if(minCountOfAmounts[amount]<10001) { // 记忆
+        return minCountOfAmounts[amount];
+    }
+    
+    int minCount=10001;
+    bool flag =true;
+    for(int coin: coins) {
+        if(amount>=coin) {
+            minCount = min(minCount, backtrace_coinChange2(coins, amount-coin));
+        }
+    }
+    // 以下都是为了维护记忆；包括返回值；
+    minCount+=1; // 加上本函数中的coin; minCount in [1, inf);
+    // minCountOfAmounts[amount] in [-1, inf]
+    minCountOfAmounts[amount] = min(minCountOfAmounts[amount], minCount);
+
+    return minCountOfAmounts[amount];
+
+}
+int coinChange2(vector<int>& coins, int amount) {
+    minCountOfAmounts.assign(amount+1, 10001);
+    int minCount = backtrace_coinChange2(coins, amount);
+    return minCount<10001? minCount: -1;
+}
+// 思路3：剪枝+记忆化搜索；写出很多bug; 
+// 现在bug是因为剪枝思路有问题，不能用当前已使用硬币数>当前解来剪枝，因为有些子问题的求解不能中止，剪枝了会导致子问题求解错误；
+// ! 下面的代码还是有bug，请勿使用
+int BUGbacktrace_coinChange(vector<int> &coins, int amount, int count) {
+    // 返回兑换amount需要最小零钱数或10001，10001表示兑换amount需要的最小零钱数超过了当前解；
+    if(amount==0) { // ans
+        minCountCoinChange = min(minCountCoinChange, count); // 更新更优解；
+        return 0; // 不需要兑换0
+    }
+    if(minCountOfAmounts[amount]<10001) { // 记忆
+        minCountCoinChange = min(minCountCoinChange, count+ minCountOfAmounts[amount]);
+        return minCountOfAmounts[amount];
+    }
+    
+    if(count<minCountCoinChange) { // count>=，则可以剪枝
+        int minCount=10001;
+        bool flag =true;
+        for(int coin: coins) {
+            if(amount>=coin) {
+                int temp = BUGbacktrace_coinChange(coins, amount-coin, count+1);
+                if(temp!=-1)
+                    minCount = min(minCount, temp);
+                else
+                    flag = false;
+            }
+        }
+        // 以下都是为了维护记忆；包括返回值；
+        minCount+=1; // 加上本函数中的coin; minCount in [1, inf);
+        // minCountOfAmounts[amount] in [-1, inf];
+        if(flag)
+            minCountOfAmounts[amount] = min(minCountOfAmounts[amount], minCount);
+
+        // 下面是minCountOfAmounts初值为-1的维护minCountOfAmounts[amount]的有bug的代码，改正的话非常复杂且容易出错；
+        // ! fix bug: minCountOfAmounts[amount]=minCount+1， 会导致改变之前求得的最小值被覆盖；
+        // if(minCount<10001) // 有更优解；
+        //     minCountOfAmounts[amount]=minCount+1; 
+        // else
+        //     minCountOfAmounts[amount]=10001; // 没有更优解，用10001代表剪枝；
+        
+        return minCountOfAmounts[amount];
+    }
+    else {
+        return -1;
+    }
+}
+int BUGcoinChange(vector<int>& coins, int amount) {
+    minCountCoinChange = 10001;
+    sort(coins.begin(), coins.end(), greater<int>());
+    minCountOfAmounts.assign(amount+1, 10001); // ! 改变初值为10001有利于剪枝
+    BUGbacktrace_coinChange(coins, amount, 0);
+    return minCountCoinChange<10001? minCountCoinChange: -1;
+}
+// 官方记忆化搜索代码思路：记录所有探索过的子问题，包括有解子问题和无解子问题；
+// * 最优思路：dp
+// O(MN), M=amount.size(), n = coins.size(); 击败31%, 59%
+int coinChange(vector<int>& coins, int amount) {
+    // 子问题的定义最为关键，dp[i]为兑换amount=i需要的最少硬币个数；
+    // dp[i]= min_j{ dp[i-coins[j]] } +1, i-coins[j]>0;
+    // 显然dp[i]依赖于dp[0]-dp[i-1]之间的一些项
+    vector<int> dp(amount+1, 10001);
+    dp[0]=0;
+    for(int i=1;i<=amount;++i) {
+        for(int j=0;j<coins.size();++j) {
+            if(i-coins[j]>=0) {
+                dp[i]= min(dp[i-coins[j]]+1, dp[i]);
+            }
+        }
+    }
+    return dp[amount]<10001? dp[amount] : -1;
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -1307,6 +1528,40 @@ int main()
     printVector(productExceptSelf(nums));
     nums.assign({-1,1,0,-3,3});
     printVector(productExceptSelf(nums));
+
+    cout<<"完全平方数"<<endl;
+    cout<<numSquares(12)<<endl;
+    cout<<numSquares(13)<<endl;
+    cout<<numSquaresDP(12)<<endl;
+    cout<<numSquaresDP(13)<<endl;
+
+    nums.assign({0,1,0,3,12});
+    moveZeroes(nums);
+    printVector(nums);
+
+    cout<<"戳气球"<<endl;
+    nums.assign({3,1,5,8});
+    cout<<maxCoins(nums)<<endl;
+    nums.assign({1,5});
+    cout<<maxCoins(nums)<<endl;
+    nums.assign({4,3,5,3,1});
+    cout<<maxCoins(nums)<<endl;
+
+    cout<<"零钱兑换"<<endl;
+    nums.assign({1,2,5});
+    cout<<coinChange(nums, 11)<<endl;
+    nums.assign({2});
+    cout<<coinChange(nums, 3)<<endl;
+    nums.assign({1});
+    cout<<coinChange(nums, 0)<<endl;
+    nums.assign({1,2,5,10});
+    cout<<coinChange(nums, 113)<<endl; // 13
+    nums.assign({224,2,217,189,79,343,101});
+    cout<<coinChange(nums, 2938)<<endl; // 11
+    nums.assign({65,451,124,70,480,441});
+    cout<<coinChange(nums, 4129)<<endl; // 10
+    nums.assign({186,419,83,40}); 
+    cout<<coinChange(nums, 6249)<<endl; // 25
 
     return 0;
 }

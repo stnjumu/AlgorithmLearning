@@ -474,6 +474,62 @@ bool wordBreak(string s, vector<string>& wordDict) {
     return dp[s.length()];
 }
 
+// 301.的一个小子问题；
+pair<int, int> getLeftRightRemoveOn(string s) {
+    // s仅包含()和字母
+    // O(n)时间得到s要变成合法括号序列，需要删除的最少的左括号和右括号数；
+    int left=0, right=0;
+    int i=0;
+    while(i<s.size()) {
+        if(s[i]=='(') {
+            left++;
+        }
+        else if(s[i]==')') {
+            if(left>0)
+                left--;
+            else
+                right++;
+        }
+        // else 字母，跳过；
+        i++;
+    }
+    return {left, right};
+}
+// 301. 删除无效的括号
+vector<string> backtrace_findans(string &s, int start) {
+    // ! 未做完，下面思路有问题，难以实现；
+    // TODO: 学习解答；
+    int left=0, right=0;
+    int i=0;
+    while(start+i<s.size() && left>=right) {
+        if(s[i]=='(') {
+            left++;
+        }
+        else if(s[i]==')') {
+            right++;
+        }
+        else {
+            // 字母
+        }
+        i++;
+    }
+    if(start+i<s.size()) {
+        // right > left, right==left+1;
+        // s[i] == ')'，分割点；
+        // s[start, start+i]共i+1个
+        string frontHalfPart = s.substr(start, i+1);
+    }
+    else {
+        // left一直>=right; 要删left;
+        // 可以正向删括号，反向删左括号；对称的；
+    }
+}
+vector<string> removeInvalidParentheses(string s) {
+    return backtrace_findans(s, 0);
+}
+
+
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；

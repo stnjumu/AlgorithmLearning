@@ -6,6 +6,7 @@
 #include<queue>
 #include<algorithm>
 #include<assert.h>
+#include<sstream>
 using namespace std;
 
 struct TreeNode {
@@ -27,7 +28,7 @@ public:
 // BFS返回拓展层次序
 // ! 本文件所有Expand都默认-1是特殊标志；标志这里是空子树；这导致本文件现有Expand函数不支持-1做为节点；
 // 之后可以换成INT_MIN
-vector<int> getLevelOrderExpand(TreeNode* root, bool removeLastNULL = true) {
+vector<int> getLevelOrderExpand(TreeNode* root, bool removeLastNULL = true, int nullNum = -1) {
     if(root == NULL)
         return {}; // 注意不是{{}}，虽然两者输出一样，但{{}}的第一个vector不为空；
 
@@ -43,10 +44,10 @@ vector<int> getLevelOrderExpand(TreeNode* root, bool removeLastNULL = true) {
             q.push(temp->right);
         }
         else {
-            ans.push_back(-1);
+            ans.push_back(nullNum);
         }
     }
-    while(ans.back()==-1)
+    while(ans.back()==nullNum)
         ans.pop_back();
     return ans;
 }
@@ -83,6 +84,26 @@ void printLevelOrder(TreeNode* root, bool expand = true, string name = "binary t
     else {
         name = name + "\'" + " LevelOrder = ";
     }
+    cout<<name;
+    for(auto n: out)
+        cout<< n<<" ";
+    cout<<endl;
+}
+void printLevelOrderWithNullNum(TreeNode* root, bool expand = true, int nullNum = -1, string name = "binary tree") {
+    vector<int> out;
+    if(expand) {
+        out = getLevelOrderExpand(root);
+    }
+    else {
+        out = getLevelOrder(root);
+    }
+    if(expand) {
+        name = name + "\'" + " Expanded" + " LevelOrder = ";
+    }
+    else {
+        name = name + "\'" + " LevelOrder = ";
+    }
+    cout<<name;
     for(auto n: out)
         cout<< n<<" ";
     cout<<endl;
@@ -102,7 +123,7 @@ void printInOrder(TreeNode *root, string name="binary tree") {
 }
 
 // 构造二叉树，拓展层次序：[1, -1, 2, 3] 
-TreeNode *vectorIntLayerOrder2BinaryTree(vector<int> nums) {
+TreeNode *vectorIntLayerOrder2BinaryTree(vector<int> nums, int nullNum = -1) {
 	int n = nums.size();
 	if (n == 0)
 		return NULL;
@@ -117,12 +138,12 @@ TreeNode *vectorIntLayerOrder2BinaryTree(vector<int> nums) {
 		TreeNode* temp = q.front();
 		q.pop();
 
-		if(nums[i]!=-1) {
+		if(nums[i]!=nullNum) {
 			temp->left = new TreeNode(nums[i]);
 			q.push(temp->left);
 		}
 		i++;
-		if(i<n && nums[i]!=-1) {
+		if(i<n && nums[i]!=nullNum) {
 			temp->right = new TreeNode(nums[i]);
 			q.push(temp->right);
 		}
@@ -171,3 +192,43 @@ TreeNode* buildSubtreeByPreOrderAndInorder(vector<int> &preorder, int prestart, 
 TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
     return buildSubtreeByPreOrderAndInorder(preorder, 0, inorder, 0, inorder.size());
 }
+
+// 297. 二叉树的序列化和反序列化
+// 击败81%, 88%
+class BinaryTreeCodec {
+public:
+    int nullNum = -10000;
+    // Encodes a tree to a single string.
+    string serialize(TreeNode* root) {
+        vector<int> leverOrder = getLevelOrderExpand(root, true, nullNum); // 题目给定节点在[-1000, 1000]之间
+        ostringstream out;
+        out<<"[";
+        for(int i=0;i<leverOrder.size();i++) {
+            out<<leverOrder[i];
+            if(i+1!=leverOrder.size())
+                out<<",";
+        }
+        out<<"]";
+        return out.str();
+    }
+
+    // Decodes your encoded data to tree.
+    TreeNode* deserialize(string data) {
+        vector<int> nums;
+        istringstream in(data);
+        char delimiter;
+        in>> delimiter;
+        if(delimiter=='[') {
+            int a=nullNum;
+            while(in>>a) { // 能够读取到整数；
+                nums.push_back(a);
+                in>>delimiter;
+            }
+            return vectorIntLayerOrder2BinaryTree(nums, nullNum); // nullNum代表空节点；
+        }
+        else {
+            cout<<"序列化的二叉树格式不符合[1,2,...,n]的格式要求!"<<endl;
+            return NULL;
+        }
+    }
+};

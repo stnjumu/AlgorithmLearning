@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <iterator>
+#include<sstream>
 using namespace std;
 
 template<class T>
@@ -13,16 +14,26 @@ void printVectorOstreamIterator(vector<T> nums, string name = "vector") {
 
 int main()
 {
-   ios::sync_with_stdio(false);
-   cin.tie(nullptr);
-   cout.tie(nullptr);
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout.tie(nullptr);
 
-   vector<int> v{1,2,2,4,8};
-   ostream_iterator<int> output(cout,"*");
-   copy(v.begin(),v.end(),output);
-   cout<<endl;
+    vector<int> v{1,2,2,4,8};
+    ostream_iterator<int> output(cout,"*");
+    copy(v.begin(),v.end(),output);
+    cout<<endl;
 
-   vector<string> strs{"hello", "world", "!"};
-   printVectorOstreamIterator(strs, "iterator output");
-   return 0;
+    vector<string> strs{"hello", "world", "!"};
+    printVectorOstreamIterator(strs, "iterator output");
+
+    istringstream in("[]");
+    char delimiter;
+    in>>delimiter;
+    cout<<delimiter<<endl;
+    int a=-1;
+    bool flag = int(in>>a);
+    cout<<flag<<endl;
+    in>>delimiter;
+    cout<<delimiter<<endl;
+    return 0;
 }
