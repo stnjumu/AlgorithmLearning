@@ -941,49 +941,6 @@ int longestConsecutive2(vector<int>& nums) {
 }
 // TODO: 并查集, 注意并查集的查找是O(log*n)并不是O(1)，所以最终严格上不算O(n)，但一般应用中，O(log*n)非常小，可认为是常数；
 
-// 152. 乘积最大子数组
-// ! 利用前缀积，因为0的存在，所以走不通，千万注意此点，而且前缀积/前缀和的代码比较复杂，甚至不如直接遍历；
-// 直接遍历法, O(n^2), 击败5%, 72%
-int maxProduct(vector<int>& nums) {
-    int ans = INT_MIN;
-    int partialProduct;
-    for(int i=0;i<nums.size();++i) {
-        partialProduct = 1;
-        for(int j=i;j<nums.size();++j) {
-            partialProduct *= nums[j];
-            if(partialProduct>ans)
-                ans = partialProduct;
-            if(partialProduct==0)
-                break;
-        }
-    }
-
-    return ans;
-}
-// dp; dp_max[i]表示nums[0, i]的最大正乘积，dp_min[i]表示nums[0,i]的最小负乘积；
-// if nums[i]>0, dp_max[i]= max(nums[i], dp_max[i-1]*nums[i]), dp_min[i]= dp_min[i-1]*nums[i]
-// if nums[i]<0, dp_min[i]= min(nums[i], dp_max[i-1]*nums[i]), dp_max[i]= dp_min[i-1]*nums[i]
-// if nums[i]==0, dp_max[i]= dp_min[i-1] = 0;
-// ! 这种dp定义初始值无法确定；如果使用0或1或-1或nums[0]等都不行，见反例{-2};
-// 注意到dp[i]只与dp[i-1]有关，所以可优化dp空间；
-
-// * 更正：dp_max[i]表示nums[0, i]的最大乘积，dp_min[i]表示nums[0,i]的最小乘积；
-// dp_max[i] = max(nums[i]*dp_max[i-1], nums[i]*dp_min[i-1], nums[i]);
-// dp_max[i] = min(nums[i]*dp_max[i-1], nums[i]*dp_min[i-1], nums[i]);
-// O(n), 击败62%, 82%
-int maxProductDP(vector<int>& nums) {
-    int dp_max=nums[0], dp_min=nums[0];
-    int ans = nums[0];
-    for(int i=1;i<nums.size();++i) {
-        int old_max = dp_max; // ! 注意dp_max
-        dp_max = max(max(nums[i], dp_max*nums[i]), dp_min*nums[i]);
-        dp_min = min(min(nums[i], old_max*nums[i]), dp_min*nums[i]);
-        ans = max(ans, dp_max);
-    }
-
-    return ans;
-}
-
 // ! 300. 最长递增子序列
 // 思路1：dp， dp[i]表示nums[0, i]中以nums[i]为结尾的最长递增子序列长度
 // dp[i]=max_j(dp[j] + 1, if nums[i]>nums[j]
@@ -1504,14 +1461,6 @@ int main()
     cout<<longestConsecutive2(nums)<<endl;
     nums.assign({0,3,7,2,5,8,4,6,0,1});
     cout<<longestConsecutive2(nums)<<endl;
-
-    cout<<"乘积最大子数组"<<endl;
-    nums.assign({2,3,-2,4});
-    cout<< maxProductDP(nums)<<endl;
-    nums.assign({-2});
-    cout<< maxProductDP(nums)<<endl;
-    nums.assign({-4, -3, -2});
-    cout<< maxProductDP(nums)<<endl;
 
     cout<<"最长递增子序列"<<endl;
     nums.assign({10,9,2,5,3,7,101,18});

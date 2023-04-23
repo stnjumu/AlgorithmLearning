@@ -4,11 +4,17 @@
 #include<algorithm>
 using namespace std;
 
+/*子数组, sub array, 连续子数组
+常用方法有滑动窗口，dp等；
+
+最大子数组和，最大子数组积，和大于等于target的长度最小的子数组
+环形最大子数组和
+*/
+
 // 53. 最大子数组和
 // 子数组是数组的一个连续部分
 // 思路1: 动态规划；O(n), 空间最好O(1), 已实现；
 // TODO: 思路2：分治法；不懂；
-
 int maxSubArrayDP(vector<int> &nums) {
     // 由下面两种解法可知，本题无后效性；
     // 定义子问题: dp[i]，表示以nums[i]结尾的所有子数组的和的最大值；
@@ -88,6 +94,53 @@ int maxSubArray1(vector<int>& nums) {
     return max;
 }
 
+// 152. 乘积最大子数组
+// ! 利用前缀积，因为0的存在，所以走不通，千万注意此点，而且前缀积/前缀和的代码比较复杂，甚至不如直接遍历；
+// 直接遍历法, O(n^2), 击败5%, 72%
+int maxProduct(vector<int>& nums) {
+    int ans = INT_MIN;
+    int partialProduct;
+    for(int i=0;i<nums.size();++i) {
+        partialProduct = 1;
+        for(int j=i;j<nums.size();++j) {
+            partialProduct *= nums[j];
+            if(partialProduct>ans)
+                ans = partialProduct;
+            if(partialProduct==0)
+                break;
+        }
+    }
+
+    return ans;
+}
+// dp; dp_max[i]表示nums[0, i]的最大正乘积，dp_min[i]表示nums[0,i]的最小负乘积；
+// if nums[i]>0, dp_max[i]= max(nums[i], dp_max[i-1]*nums[i]), dp_min[i]= dp_min[i-1]*nums[i]
+// if nums[i]<0, dp_min[i]= min(nums[i], dp_max[i-1]*nums[i]), dp_max[i]= dp_min[i-1]*nums[i]
+// if nums[i]==0, dp_max[i]= dp_min[i-1] = 0;
+// ! 这种dp定义初始值无法确定；如果使用0或1或-1或nums[0]等都不行，见反例{-2};
+// 注意到dp[i]只与dp[i-1]有关，所以可优化dp空间；
+
+// * 更正：dp_max[i]表示nums[0, i]的最大乘积，dp_min[i]表示nums[0,i]的最小乘积；
+// dp_max[i] = max(nums[i]*dp_max[i-1], nums[i]*dp_min[i-1], nums[i]);
+// dp_max[i] = min(nums[i]*dp_max[i-1], nums[i]*dp_min[i-1], nums[i]);
+// O(n), 击败62%, 82%
+int maxProductDP(vector<int>& nums) {
+    int dp_max=nums[0], dp_min=nums[0];
+    int ans = nums[0];
+    for(int i=1;i<nums.size();++i) {
+        int old_max = dp_max; // ! 注意dp_max
+        dp_max = max(max(nums[i], dp_max*nums[i]), dp_min*nums[i]);
+        dp_min = min(min(nums[i], old_max*nums[i]), dp_min*nums[i]);
+        ans = max(ans, dp_max);
+    }
+
+    return ans;
+}
+
+// TODO: 环形最大子数组和
+// 思路1：求非环形的最大子数组和，求所有元素和sum，将所有元素取负数后，再求最大子数组和，则sum+负数组的最大子数组和即环形部分的最大子数组和；两者取最大即可；(记得做过此题，但忘记在哪了)
+// 思路2：将n个元素的环形拓展成2n-1个元素的数组，且限制最大子数组长度为n, 则问题就转换成求新数组的长度小于等于n的最大子数组和；(未验证正确与否)
+
 int main()
 {
     vector<int> nums{-2,1,-3,4,-1,2,1,-5,4};
@@ -104,6 +157,14 @@ int main()
     cout<<maxSubArray1(nums)<<endl;
     cout<<maxSubArray2(nums)<<endl;
     cout<<maxSubArrayDP(nums)<<endl;
+
+    cout<<"乘积最大子数组"<<endl;
+    nums.assign({2,3,-2,4});
+    cout<< maxProductDP(nums)<<endl;
+    nums.assign({-2});
+    cout<< maxProductDP(nums)<<endl;
+    nums.assign({-4, -3, -2});
+    cout<< maxProductDP(nums)<<endl;
 
     return 0;
 }

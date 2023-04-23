@@ -37,7 +37,7 @@ int length_longest_common_subsequence_dp(string text1, string text2) {
     return dp[m][n];
 }
 
-// 300. 最长严格递增子序列
+// 300. 最长严格递增子序列 (array.cpp中又做了一遍)
 // 暴力法：O(n!)
 // 思路1：动态规划，构造子问题dp[i]表示以nums[i]结尾的最长严格递增子序列长度；具体分析见下；
 // TODO: 思路2：贪心；注意到在判断后面的数和一个序列是否可以构成更长的严格递增子序列长度时，只需比较该数和序列的最后一个数；与之前的数没有关系；
