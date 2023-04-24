@@ -1282,6 +1282,34 @@ int coinChange(vector<int>& coins, int amount) {
     return dp[amount]<10001? dp[amount] : -1;
 }
 
+// 347. 前K个高频元素
+// 大小为k的小顶堆，O(nlogk), 击败49%，16%
+vector<int> topKFrequent(vector<int>& nums, int k) {
+    unordered_map<int, int> counts;
+    for(int num: nums) {
+        ++counts[num];
+    }
+    
+    // k个元素的小顶堆
+    vector<pair<int,int> > heap;
+    auto greater = [](pair<int,int> count1, pair<int,int> count2){
+        return count1.second > count2.second;
+    };
+    for(auto count: counts) {
+        heap.push_back(count);
+        push_heap(heap.begin(), heap.end(), greater);
+        if(heap.size()==k+1) {
+            pop_heap(heap.begin(), heap.end(), greater);
+            heap.pop_back();
+        }
+    }
+    vector<int> ans;
+    for(auto p: heap) {
+        ans.push_back(p.first);
+    }
+    return ans;
+}
+
 int main()
 {
     cout<< "接雨水"<<endl;
@@ -1511,6 +1539,12 @@ int main()
     cout<<coinChange(nums, 4129)<<endl; // 10
     nums.assign({186,419,83,40}); 
     cout<<coinChange(nums, 6249)<<endl; // 25
+
+    cout<<"前K个高频元素"<<endl;
+    nums.assign({1,1,1,2,2,3});
+    printVector(topKFrequent(nums, 2));
+    nums.assign({1,1,1,2,2,3,3,3,3,3,3,3,3,3,3,3,9,9,9,9,8});
+    printVector(topKFrequent(nums, 3));
 
     return 0;
 }

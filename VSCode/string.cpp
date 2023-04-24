@@ -528,7 +528,52 @@ vector<string> removeInvalidParentheses(string s) {
     return backtrace_findans(s, 0);
 }
 
+// 394. 字符串解码
+// 递归, 击败100%, 91%
+string decodeString(string s) {
+    string ans;
+    int i=0;
+    while(i<s.size()) {
+        char c = s[i];
+        if(isdigit(c)) {
+            int end = i+1;
+            while(isdigit(s[end])) {
+                end++;
+            }
+            assert(s[end]=='[');
+            string num_s = s.substr(i, end-i);
+            int num = stoi(num_s);
+            
+            // 寻找和[匹配的];
+            int str_end = end+1;
+            int layer= 1;
+            while(layer != 0) {
+                if(s[str_end]=='[') {
+                    layer++;
+                }
+                else if(s[str_end]==']') {
+                    layer--;
+                    if(layer==0) // 最终指向匹配的]
+                        break;
+                }
+                str_end++;
+            }
+            string decodedStr = decodeString(s.substr(end+1, str_end-end-1));
+            for(int j=0;j<num;++j) {
+                ans+= decodedStr;
+            }
 
+            i = str_end+1;
+        }
+        else {
+            assert(c!='[' && c!=']');
+            ans+= c;
+
+            i++;
+        }
+    }
+    return ans;
+}
 
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
@@ -623,6 +668,11 @@ int main() {
     
     strs.assign({"cats", "dog", "sand", "and", "cat"});
     cout<<wordBreak("catsandog", strs)<<endl;
+
+    cout<<"字符串解码"<<endl;
+    cout<<decodeString("3[a]2[bc]")<<endl;
+    cout<<decodeString("3[2[bc]]")<<endl;
+    cout<<decodeString("100[leetcode]")<<endl;
 
     return 0;
 }
