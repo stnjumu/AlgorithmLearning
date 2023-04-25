@@ -1310,6 +1310,34 @@ vector<int> topKFrequent(vector<int>& nums, int k) {
     return ans;
 }
 
+// 416. 分割等和子集（子数组）
+// 回溯, 栈溢出
+bool backtrace_canPartition(vector<int> &nums, int start, int target) {
+    if(target==0) {
+        return true;
+    }
+    
+    if(backtrace_canPartition(nums, start+1, target)) {
+        return true;
+    }
+    if(target>nums[start] && backtrace_canPartition(nums, start+1, target-nums[start])) {
+        return true;
+    }
+    return false;
+}
+bool canPartition(vector<int>& nums) {
+    int target = accumulate(nums.begin(), nums.end(), 0);
+    if(target % 2 == 1) {
+        return false;
+    }
+
+    target/=2;
+    // 寻找子数组，和刚好为target;
+    return backtrace_canPartition(nums, 0, target);
+}
+// dp, 0-1背包问题 (此题是NPC问题，无多项式解)
+// TODO: 
+
 int main()
 {
     cout<< "接雨水"<<endl;
