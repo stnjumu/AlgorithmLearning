@@ -1310,7 +1310,7 @@ vector<int> topKFrequent(vector<int>& nums, int k) {
     return ans;
 }
 
-// 416. 分割等和子集（子数组）
+// 416. 分割等和子集（子序列）
 // 回溯, 栈溢出
 bool backtrace_canPartition(vector<int> &nums, int start, int target) {
     if(target==0) {
@@ -1336,7 +1336,104 @@ bool canPartition(vector<int>& nums) {
     return backtrace_canPartition(nums, 0, target);
 }
 // dp, 0-1背包问题 (此题是NPC问题，无多项式解)
-// TODO: 
+// dp[i,j]表示只用前i个元素是否有子序列的和为j
+// dp[i,j] = dp[i-1, j], 不使用nums[i]
+//         || dp[i-1, j-nums[i]], 使用nums[i]
+// 击败5%, 49%
+bool canPartitionDP(vector<int>& nums) {
+    // nums.size()>=1
+    int target = accumulate(nums.begin(), nums.end(), 0);
+    if(target % 2 == 1) return false;
+    target/=2;
+    // 转换为是否存在子序列和为target=sum/2;
+    vector<vector<bool>> dp(nums.size(), vector<bool>(target+1, false));
+    dp[0][0]=true;
+    if(nums[0]<=target) // ! nums[0]很可能>target, 例如[100];
+        dp[0][nums[0]]=true;
+    for(int i=1;i<nums.size();++i) {
+        for(int j=0;j<=target;++j) {
+            dp[i][j]=dp[i-1][j]; // 不使用nums[i]
+            if(j>=nums[i]) { // ! 两者必须分开，不能按分析的那样在一个语句中，如下面注释所示；
+                dp[i][j] = dp[i][j] || dp[i-1][j-nums[i]];
+            }
+            // ! BUG ! Don't use.
+            // if(j>=nums[i]) {
+            //     dp[i][j] = dp[i][j]=dp[i-1][j] || dp[i-1][j-nums[i]];
+            // }
+        }
+    }
+    return dp[nums.size()-1][target];
+}
+
+
+// 406. 根据身高重建队列
+// my思路1: 观察发现重排的[hi, ki]中，ki=kj时(前面更高的个数相同)，必有hi<hj, if i<j; 否则显然后面的更高的个数会加1；
+// ki即hi向前的逆序对个数；只不过相同也算；
+// 我的做法：先按ki升序，再按hi升序；按上面顺序插入到ans中，每个元素插入时只需看ans前面有多少个更大的和ki关系，从而确定插入位置；
+// 击败65%, 48%;
+vector<vector<int>> reconstructQueue(vector<vector<int>>& people) {
+    // 按ki升序插入
+    sort(people.begin(), people.end(), [](vector<int> &a, vector<int> &b){
+        if(a[1]<b[1])
+            return true;
+        else if(a[1]>b[1])
+            return false;
+        else {
+            return a[0]<b[0];
+        }
+        // 等价于return a[1]<b[1] || a[1]==b[1] && a[0]<b[0]
+    });
+
+    vector<vector<int>> ans;
+    for(int i=0;i<people.size();++i) {
+        // insert people[i] to ans;
+        int hi = people[i][0];
+        int ki = people[i][1];
+
+        int greaterBefore = 0;
+        int j=0;
+        while(j<ans.size()) {
+            if(greaterBefore == ki) {
+                if(ans[j][0]<hi) {
+                    // people[i]插入到ans[j]后面
+                }
+                else { // hi <= ans[j][0]
+                    // people[i]应该插入到ans[j]前面, 否则people[i]比ans[j]低，people[i]再往后会导致greaterBefore++;
+                    break;
+                }
+            }
+            else {
+                assert(greaterBefore< ki);
+                if(hi <= ans[j][0])
+                    greaterBefore++;
+            }
+            j++;
+        }
+        if(j<ans.size())
+            ans.insert(ans.begin()+j, people[i]);
+        else
+            ans.push_back(people[i]);
+    }
+    return ans;
+}
+// 标答：身高从高到低排列；即按hi降序，ki升序排列后依次插入；
+// 显然, ki刚好等于其前面元素个数；因为后插入的元素高度小于等于之前插入所有元素，所以直接插入到第ki位即可
+// 当然，ki>ans.size()时插入到队尾即可；
+vector<vector<int>> reconstructQueueAns(vector<vector<int>>& people) {
+    sort(people.begin(), people.end(), [](const vector<int>& u, const vector<int>& v) {
+        return u[0] > v[0] || (u[0] == v[0] && u[1] < v[1]);
+    });
+    vector<vector<int>> ans;
+    for (const vector<int>& person: people) {
+        if(person[1]>ans.size()) { // ! 标答没这句话，我觉得有问题；ki比ans现有元素大，则插入队尾；
+            ans.push_back(person);
+        }
+        else
+            ans.insert(ans.begin() + person[1], person);
+    }
+    return ans;
+}
+
 
 int main()
 {
@@ -1573,6 +1670,19 @@ int main()
     printVector(topKFrequent(nums, 2));
     nums.assign({1,1,1,2,2,3,3,3,3,3,3,3,3,3,3,3,9,9,9,9,8});
     printVector(topKFrequent(nums, 3));
+
+    cout<<"分割等和子集"<<endl;
+    nums.assign({1,5,11,5});
+    cout<<canPartitionDP(nums)<<endl;
+    nums.assign({1,2,3,5});
+    cout<<canPartitionDP(nums)<<endl;
+    nums.assign({100});
+    cout<<canPartitionDP(nums)<<endl;
+
+    cout<<"根据身高重建队列"<<endl;
+    vector<vector<int>> people{{7,0},{4,4},{7,1},{5,0},{6,1},{5,2}};
+    printVectorVector(people);
+    printVectorVector(reconstructQueueAns(people));
 
     return 0;
 }

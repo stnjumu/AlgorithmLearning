@@ -7,6 +7,8 @@
 #include<unordered_set>
 using namespace std;
 
+// 子序列，可以不连续
+
 // 1143. 最长公共子序列
 // 定义dp[i,j], i in [0, m), j in [0, n), 表示text1[0, i]和text2[0,j]的最长公共子序列；
 // dp[i,j] = dp[i-1,j-1]+1,  if text1[i]==text2[j]
