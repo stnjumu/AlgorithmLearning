@@ -2,13 +2,15 @@
 #include<vector>
 #include<assert.h>
 #include<algorithm>
+#include<unordered_map>
 using namespace std;
 
 /*子数组, sub array, 连续子数组
-常用方法有滑动窗口，dp等；
+常用方法有滑动窗口(要求全正数)，dp等；
 
 最大子数组和，最大子数组积，和大于等于target的长度最小的子数组
 环形最大子数组和
+和为K的子数组(仅正元素时滑动窗口O(n); 有负元素时, 暴力O(n^2), 哈希优化后O(n), 比较难理解);
 */
 
 // 53. 最大子数组和
@@ -141,6 +143,41 @@ int maxProductDP(vector<int>& nums) {
 // 思路1：求非环形的最大子数组和，求所有元素和sum，将所有元素取负数后，再求最大子数组和，则sum+负数组的最大子数组和即环形部分的最大子数组和；两者取最大即可；(记得做过此题，但忘记在哪了)
 // 思路2：将n个元素的环形拓展成2n-1个元素的数组，且限制最大子数组长度为n, 则问题就转换成求新数组的长度小于等于n的最大子数组和；(未验证正确与否)
 
+// 560. 和为K的子数组
+// 全部是正数则可以滑动窗口
+// 本题元素可以为负数，则必须dp;
+// 思路1：暴力, O(n^2)，时间超限
+// * 思路2：标答：前缀和+哈希表优化, O(n), O(n)
+// ? 此解法很难从dp子问题的角度理解，请结合代码理解并背过；
+// 将前缀和记为pre, pre[i]表示\sum nums[0, i]
+// 则子数组nums[j, i]是解等价于pre[i]-pre[j-1] == k
+// 等价于pre[j-1] = pre[i]-k 出现过；
+// 那么我们可以统计所有前缀和的出现次数dp[n]
+// dp[m,n]表示使用前m个num，前缀和n出现的次数；
+// dp[m,:]在遍历前m个num使就可得到；
+// 且dp[m, :]可由dp[m-1,:]和nums[m]直接得到；
+// 而且在统计以nums[i]为结尾的和为K的子数组时，只需要dp[i, :]
+// 所以可省略m这一维，即dp[:]统计所有前缀和出现的次数；
+// 可以使用hash map来统计次数；
+// 击败61%, 76%
+int subarraySum(vector<int>& nums, int k) {
+    unordered_map<int,int> preSumCount;
+    preSumCount[0]=1; // ! 空数组的前缀和为0; 用于所有前缀和刚好等于k的情况；
+
+    int sum = 0;
+    int ans = 0;
+    for(int i=0;i<nums.size();++i) {
+        sum+=nums[i];
+        // preSumCount[sum]++;
+        // ! 之前是先把sum放入map, 再寻找，这种情况会在k==0时出现问题，就是每个值都会查找到自身，导致计数错误；
+        // 反例 nums= [1], k = 0;
+        if(preSumCount.find(sum-k)!=preSumCount.end())
+            ans += preSumCount[sum-k];
+        preSumCount[sum]++;
+    }
+    return ans;
+}
+
 int main()
 {
     vector<int> nums{-2,1,-3,4,-1,2,1,-5,4};
@@ -165,6 +202,14 @@ int main()
     cout<< maxProductDP(nums)<<endl;
     nums.assign({-4, -3, -2});
     cout<< maxProductDP(nums)<<endl;
+
+    cout<<"和为K的子数组"<<endl;
+    nums.assign({1,1,1});
+    cout<<subarraySum(nums, 2)<<endl;
+    nums.assign({1,2,3});
+    cout<<subarraySum(nums, 3)<<endl;
+    nums.assign({1});
+    cout<<subarraySum(nums, 0)<<endl;
 
     return 0;
 }

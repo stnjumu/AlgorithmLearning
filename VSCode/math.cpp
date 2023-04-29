@@ -3,6 +3,7 @@
 #include<iostream>
 #include<assert.h>
 #include<string>
+#include<numeric>
 using namespace std;
 
 // 338. 比特位计数
@@ -276,6 +277,103 @@ vector<double> calcEquation(vector<vector<string>>& equations, vector<double>& v
     return ans;
 }
 
+// 461. 汉明距离
+// 思路1：暴力法：求出两者的2进制表示，然后逐一对比即可；
+// 击败27%, 29%
+vector<int> getBinaryUnsignedInt(int x) {
+    assert(x>=0);
+    vector<int> ans(32, 0);
+    int i=0; // 最低位对应0位；
+    while(x!=0) {
+        if(x%2==1) {
+            ans[i]=1;
+        }
+        x/=2;
+        i++;
+    }
+    return ans;
+}
+int hammingDistance(int x, int y) {
+    vector<int> xB = getBinaryUnsignedInt(x);
+    vector<int> yB = getBinaryUnsignedInt(y);
+    int count=0;
+    for(int i=0;i<xB.size();++i) {
+        if(xB[i]!=yB[i])
+            count++;
+    }
+    return count;
+}
+// 思路2：x异或y，统计结果的二进制表示中1的个数即可；
+// 击败100%, 21%; ?? 我这空间竟然不是最低；
+int hammingDistance2(int x, int y) {
+    x ^= y;
+    y=0;
+    while(x!=0) {
+        if(x%2)
+            ++y;
+        x/=2;
+    }
+    return y;
+}
+
+// 494. 目标和
+// 思路1：暴力，每个num只能+或-，且没有优先级，所以回溯法2^n次遍历出结果；
+// 击败20%, 89%
+int ansFindTargetSumWays;
+void backtrace_findTargetSumWays(vector<int> &nums, int target, int start) {
+    if(start==nums.size()) {
+        if(target==0)
+            ansFindTargetSumWays++;
+        return;
+    }
+
+    backtrace_findTargetSumWays(nums, target+nums[start], start+1);
+    backtrace_findTargetSumWays(nums, target-nums[start], start+1);
+}
+int findTargetSumWays(vector<int>& nums, int target) {
+    ansFindTargetSumWays=0;
+    backtrace_findTargetSumWays(nums, target, 0);
+    return ansFindTargetSumWays;
+}
+// 思路2(失败)：dp; dp[i,j]表示只用前i(从1开始)个整数，能表示j的表达式个数；
+// dp[i,j]  = dp[i-1, j-nums[i-1]], 减法
+//          + dp[i-1, j+nums[i-1]], 加法
+// ! 由于有负数，所以下标需要负数，且下标j可以超过target，此种dp不能使用；
+// 思路3：标答；转换
+// 记sum = \sum_i nums[i]; 注：nums[i]>=0; 记选+的所有数之和为pos, 记选-的所有数之和为neg;
+// 则pos = sum-neg, 所求target = pos - neg = sum - 2neg;
+// 即neg = (sum-target)/2;
+// 等价于与求nums的子集，使这个子序列的和等于(sum-target)/2; 求子集个数；
+// ! 0-1背包问题；dp[i,j]表示用前i个数能表示j的子集个数;
+// dp[i,j]=   dp[i-1, j], 不使用第i个数
+//          + dp[i-1, j-nums[i-1]]，使用第i个数
+// dp[0, j]=0; dp[0,0]=1;
+// 击败57%, 22%, 可选优化：优化空间到O(n);
+int findTargetSumWaysDP(vector<int>& nums, int target) {
+    int sum = accumulate(nums.begin(), nums.end(), 0);
+    if(abs(target) > sum) // ! 全部取+或全部取-都不能表示；
+        return 0;
+
+    // (sum-target)/2
+    target = sum - target;
+    if(target % 2 == 1) // ! -1 % 2 == -1; 上面的判断去除了负数的情况，但这个性能仍要注意；
+        return 0;
+    
+    target /= 2;
+    vector<vector<int>> dp(nums.size()+1, vector<int>(target+1, 0));
+    int ans=0;
+    dp[0][0]=1;
+    for(int i=1;i<=nums.size();++i) {
+        for(int j=0;j<=target; ++j) {
+            dp[i][j]=dp[i-1][j];
+            if(j-nums[i-1]>=0)
+                dp[i][j]+=dp[i-1][j-nums[i-1]];
+        }
+    }
+    return dp[nums.size()][target];
+}
+
+
 int main() {
     cout<< fastPower(-1.0, -2147483648)<<endl;
     cout<< myPow3(2.0, -2)<<endl;
@@ -299,6 +397,16 @@ int main() {
     values.assign({4.0, 2.0});
     queries.assign({{"a", "c"}, {"b", "c"}, {"c","b"}, {"a","a"}, {"x","x"}});
     printVector(calcEquation(equations, values, queries));
+
+    cout<<"汉明距离"<<endl;
+    cout<<hammingDistance2(1, 4)<<endl;
+    cout<<hammingDistance2(3, 1)<<endl;
+
+    cout<<"目标和"<<endl;
+    vector<int> nums{1,1,1,1,1};
+    cout<<findTargetSumWaysDP(nums, 3)<<endl;
+    nums.assign({1});
+    cout<<findTargetSumWaysDP(nums, 2)<<endl;
 
     return 0;
 }

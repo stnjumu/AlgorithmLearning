@@ -377,6 +377,158 @@ int rob(TreeNode* root) {
     return max(maxRootRobOrNot.first, maxRootRobOrNot.second);
 }
 
+// 112. 路径总和 (根到叶子节点的路径)
+// 击败83%, 91%
+bool dfsHasPathSum(TreeNode* subtree, int target) {
+    // 出口
+    // ! 下面有误；递归出口应该是叶子节点，而不是NULL; 反例root = [1,2], target = 1;
+    // if(subtree==NULL) {
+    //     if(target==0)
+    //         return true;
+    //     else
+    //         return false;
+    // }
+    if(subtree == NULL) return false;
+    if(subtree->left==NULL && subtree->right==NULL) {
+        if(target==subtree->val) return true;
+        else return false;
+    }
+
+    return dfsHasPathSum(subtree->left, target-subtree->val)
+            || dfsHasPathSum(subtree->right, target-subtree->val);
+}
+bool hasPathSum(TreeNode* root, int targetSum) {
+    if(root==NULL)
+        return false;
+    
+    return dfsHasPathSum(root, targetSum);
+}
+
+// 113. 路径总和II (根到叶子节点的路径, 需要给出路径)
+// 击败75%, 74%
+void dfsPathSumII(TreeNode* subtree, int targetSum, vector<int> &path, int pathSum, vector<vector<int>> &ans) {
+    // 出口
+    if(subtree==NULL) return;
+    if(subtree->left==NULL && subtree->right==NULL) { // 叶子节点
+        if(pathSum+subtree->val==targetSum) {
+            path.push_back(subtree->val);
+            ans.push_back(path);
+            path.pop_back();
+        }
+        return;
+    }
+
+    path.push_back(subtree->val);
+    dfsPathSumII(subtree->left, targetSum, path, pathSum+subtree->val, ans);
+    dfsPathSumII(subtree->right, targetSum, path, pathSum+subtree->val, ans);
+    path.pop_back();
+}
+vector<vector<int>> pathSumII(TreeNode* root, int targetSum) {
+    if(root == NULL)
+        return {};
+    
+    vector<vector<int>> ans;
+    vector<int> path;
+    dfsPathSumII(root, targetSum, path, 0, ans);
+    return ans;
+}
+
+// 437. 路径总和III
+// 注意此题中路径只包括从祖先节点到子孙节点的路径；
+int ans;
+// ! BUG: 前序递归遍历, 下面写法有问题，见例子2，其实是因为此种遍历方法会导致每个节点做为起点遍历多次；
+void preOrderPathSum(TreeNode* root, int targetSum, int pathSum) {
+    // if(targetSum==pathSum) { // ! 使用此句有bug，会导致计数两次；因为到此层之前就和为targetSum, 会遍历左右子树，所以两次；
+    if(root == NULL) {
+        return;
+    }
+    if(targetSum==pathSum+root->val) {
+        ans++;
+        return;
+    }
+
+    // 节点有正有负，需要遍历到叶子，不能剪枝；
+    // 延续之前
+    preOrderPathSum(root->left, targetSum, pathSum+root->val);
+    preOrderPathSum(root->right, targetSum, pathSum+root->val);
+
+    // 从子节点开始
+    preOrderPathSum(root->left, targetSum, 0);
+    preOrderPathSum(root->right, targetSum, 0);
+}
+int pathSumERROR(TreeNode* root, int targetSum) {
+    ans = 0;
+    preOrderPathSum(root, targetSum, 0);
+    return ans;
+}
+// 标答1
+// O(n^2), 击败32%, 83%
+int rootPathSum(TreeNode* subtree, long long targetSum) { // ! targetSum在迭代过程中可能超出int;
+    int ans=0;
+    if(subtree==NULL) return 0; // 出口
+    if(targetSum==subtree->val) ans++; // 注意不能targetSum==0才统计，因为解的左右子树会统计两次；注意不能return;
+
+    ans+=rootPathSum(subtree->left, targetSum-subtree->val);
+    ans+=rootPathSum(subtree->right, targetSum-subtree->val);
+    return ans;
+}
+int pathSum(TreeNode* root, int targetSum) {
+    if(root == NULL) return 0; // 出口；
+    // 统计树中解的个数，包含以下两部分：
+    // 1. 统计以root为路径端点的路径中和为target的个数；
+    int ans = rootPathSum(root, targetSum);
+    
+    // 2. 递归统计以其他节点为端点的路径中解的个数
+    ans += pathSum(root->left, targetSum);
+    ans += pathSum(root->right, targetSum);
+    return ans;
+}
+// TODO: 标答2: O(n), 前缀和，融入整个DFS遍历过程，细节要求很多。
+
+// 543. 二叉树的直径
+// 击败95%, 64%
+int ansDiameterOfBinaryTree;
+int dfsPostOrderGetRootToLeafMaxLen(TreeNode* subtree) {
+    // 返回子树根到叶子节点最长路径节点数；
+    if(subtree==NULL)
+        return 0;
+    
+    int leftLen = dfsPostOrderGetRootToLeafMaxLen(subtree->left);
+    int rightLen = dfsPostOrderGetRootToLeafMaxLen(subtree->right);
+    // Post Order
+    // 子树的过根的最长路径= leftLen(节点数) + rightLen(节点数);
+    if(leftLen + rightLen > ansDiameterOfBinaryTree)
+        ansDiameterOfBinaryTree= leftLen+rightLen;
+    return max(leftLen, rightLen)+1;
+}
+int diameterOfBinaryTree(TreeNode* root) {
+    ansDiameterOfBinaryTree=0;
+    dfsPostOrderGetRootToLeafMaxLen(root);
+    return ansDiameterOfBinaryTree;
+}
+
+// 617. 合并二叉树
+// 击败%9, %5;
+TreeNode* mergeTrees(TreeNode* root1, TreeNode* root2) {
+    if(root1 == NULL && root2==NULL)
+        return NULL;
+    
+    TreeNode *root = new TreeNode(0);
+    // if(root1!=NULL)
+    //     root->val += root1->val;
+    // if(root2!=NULL)
+    //     root->val += root2->val;
+    root->val = (root1==NULL? 0: root1->val) + (root2==NULL?0:root2->val);
+    
+    // ! root1 或 root2可能为NULL
+    // 使用?:操作符可以方便运算；
+    root->left = mergeTrees(root1==NULL? NULL: root1->left, root2==NULL? NULL: root2->left);
+    root->right = mergeTrees(root1==NULL? NULL: root1->right, root2==NULL? NULL: root2->right);
+    return root;
+}
+// TODO: 要求使用root1和root2的节点进行合并，同时存在则delete其中的一个空间；
+// ! 注：这种合并方式不是构造新树，需要和上层的回收树空间的代码进行配合，否则可能delete一处空间多次；
+
 int main() {
     TreeNode * root = vectorIntLayerOrder2BinaryTree({3,9, 20, -1, -1, 15, 7});
     printInOrder(root);
@@ -491,6 +643,57 @@ int main() {
     root = vectorIntLayerOrder2BinaryTree({3,4,5,1,3,-1,1});
     cout<< rob(root)<<endl;
     deleteBinaryTree(root);
+
+    cout<<"路径总和"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({5,4,8,11,-1,13,4,7,2,-1,-1,-1,1});
+    printBool(hasPathSum(root, 22));
+    deleteBinaryTree(root);
+    root = vectorIntLayerOrder2BinaryTree({1,2,3});
+    printBool(hasPathSum(root, 5));
+    deleteBinaryTree(root);
+    root = vectorIntLayerOrder2BinaryTree({1,2});
+    printBool(hasPathSum(root, 1));
+    deleteBinaryTree(root);
+
+    cout<<"路径总和II"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({5,4,8,11,-1,13,4,7,2,-1,-1,-1,5,1});
+    printVectorVector(pathSumII(root, 22));
+    deleteBinaryTree(root);
+    root = vectorIntLayerOrder2BinaryTree({1,2,3});
+    printVectorVector(pathSumII(root, 5));
+    deleteBinaryTree(root);
+    root = vectorIntLayerOrder2BinaryTree({1,2});
+    printVectorVector(pathSumII(root, 1));
+    deleteBinaryTree(root);
+
+
+    cout<<"路径总和III"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({10,5,-3,3,2,INT_MIN,11,3,-2,INT_MIN,1}, INT_MIN);
+    cout<<pathSumERROR(root, 8)<<endl;
+    deleteBinaryTree(root);
+    root = vectorIntLayerOrder2BinaryTree({1,-2,-3,1,3,-2,INT_MIN,-1}, INT_MIN);
+    cout<<"Wrong Ans:"<<pathSumERROR(root, 3)<<", 应为1"<<endl;
+    deleteBinaryTree(root);
+    cout<<"路径总和III: 标答"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({10,5,-3,3,2,INT_MIN,11,3,-2,INT_MIN,1}, INT_MIN);
+    cout<<pathSum(root, 8)<<endl;
+    deleteBinaryTree(root);
+    root = vectorIntLayerOrder2BinaryTree({1,-2,-3,1,3,-2,INT_MIN,-1}, INT_MIN);
+    cout<<pathSum(root, 3)<<endl;
+    deleteBinaryTree(root);
+
+    cout<<"二叉树的直径"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({1,2,3,4,5});
+    cout<<diameterOfBinaryTree(root)<<endl;
+
+    cout<<"合并二叉树"<<endl;
+    TreeNode *root1 = vectorIntLayerOrder2BinaryTree({1,3,2,5});
+    TreeNode *root2 = vectorIntLayerOrder2BinaryTree({2,1,3,-1,4,-1,7});
+    root = mergeTrees(root1,root2);
+    printLevelOrder(root);
+    deleteBinaryTree(root);
+    deleteBinaryTree(root1);
+    deleteBinaryTree(root2);
 
     return 0;
 }

@@ -2,7 +2,8 @@
 
 #include<iostream>
 #include<vector>
-#include <iterator>
+#include<iterator>
+#include<assert.h>
 // #include<VECTOR> // Window下C++头文件对大小写不敏感；
 using namespace std;
 
@@ -22,6 +23,13 @@ remove: 将指定范围内满足条件的元素都移到尾部；常配合erase�
     a.erase(remove(a.begin(), a.end(), val), a.end()); 删除a中所有值为val的元素；
     remove为std的算法，只会改变容器内部顺序，而不会改变容器大小；
 */
+
+void printBool(bool flag) {
+    if(flag)
+        cout<<"true"<<endl;
+    else
+        cout<<"false"<<endl;
+}
 
 template<class T>
 void printVector(vector<T> nums, string name = "vector") {

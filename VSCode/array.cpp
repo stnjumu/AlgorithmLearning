@@ -1,6 +1,7 @@
 #include"DataStructure/Array.h"
 #include<iostream>
 #include<vector>
+#include<stack>
 #include<assert.h>
 #include<algorithm>
 #include<string>
@@ -1332,7 +1333,7 @@ bool canPartition(vector<int>& nums) {
     }
 
     target/=2;
-    // 寻找子数组，和刚好为target;
+    // 寻找子序列，和刚好为target;
     return backtrace_canPartition(nums, 0, target);
 }
 // dp, 0-1背包问题 (此题是NPC问题，无多项式解)
@@ -1434,6 +1435,143 @@ vector<vector<int>> reconstructQueueAns(vector<vector<int>>& people) {
     }
     return ans;
 }
+
+// 448. 找到所有数组中消失的数字
+// 思路1：直接法：O(n), O(n), 击败71%, 38%
+vector<int> findDisappearedNumbers(vector<int>& nums) {
+    vector<bool> appear(nums.size(),false);
+    for(int num:nums)
+        appear[num-1]=true;
+    vector<int> ans;
+    for(int i=0;i<appear.size();++i) {
+        if(!appear[i])
+            ans.push_back(i+1);
+    }
+    return ans;
+}
+// 思路2：要求时间O(n), 空间O(1)(除返回数组外)；
+// 利用nums来存取额外信息；
+// 法1：由于nums[i] in [1, n]，所以可以用nums[i]+n表示i出现过
+// 法2：由于nums[i]>0, 所以可以用-nums[i]表示i出现过
+// 实现法2，击败71%, 79%;
+vector<int> findDisappearedNumbersOnO1(vector<int>& nums) {
+    // 实现法2
+    for(int i=0;i<nums.size();++i) {
+        // if(nums[i]<0) { // 之前遇到过i, -nums[i]才是原来的值
+        //     nums[-nums[i]-1]=-abs(nums[-nums[i]-1]);
+        // }
+        // else {
+        //     nums[nums[i]-1]=-abs(nums[nums[i]-1]);
+        // }
+        // if-else两句可合并为一句话，注意上面写法更容易理解；
+        nums[abs(nums[i])-1]=-abs(nums[abs(nums[i])-1]);
+    }
+    vector<int> ans;
+    for(int i=0;i<nums.size();++i) {
+        if(nums[i]>0)
+            ans.push_back(i+1);
+    }
+    return ans;
+}
+
+// 581. 最短无序连续子数组
+// 所有子数组中，先找满足条件：对此子数组升序排序后，整个数组升序；求满足条件的所有子数组的最小长度；
+// 思路1：暴力，从左到右遍历找左边界，第一个能和后面元素组成逆序对的元素；
+// 然后从右到左找有边界即可；
+// O(n^2), 击败6%, 46%
+int findUnsortedSubarray(vector<int>& nums) {
+    int left= 0, right = nums.size()-1;
+    while(left<nums.size()) {
+        int i=left+1; // ! 错写成i=0
+        while(i<nums.size()) {
+            if(nums[left]>nums[i]) // 逆序对
+                break;
+            i++;
+        }
+        if(i<nums.size()) // find逆序对
+            break;
+        left++;
+    }
+    if(left==nums.size()) // 整体有序
+        return 0;
+    // [0, left) 有序, 且小于等于右边所有元素；
+    while(right>left) {
+        int j=right-1;
+        while(j>=left) { // ! 错写成right>left, j>left; 后者反例[2,1]
+            if(nums[right]<nums[j])
+                break;
+            j--;
+        }
+        if(j>=left)
+            break;
+        right--;
+    }
+    // (right, end)有序，且大于等于左边所有元素
+    // [left, right]需要排序
+    return right-left+1;
+}
+// 思路2：使用单调栈求下一个更小元素和上一个更大元素, O(n)
+// 则第一个存在下一个更小元素的记为left, 最后一个存在上一个更大元素的即right;
+// ! 注意必须求所有元素的下一个更小元素才能确定left, 确定right同理，因为有相等情况存在，反例[1,3,2,2,2]
+// 只将单调栈的第一个解弹出是错误的；
+// O(n), O(n), 击败53%, 5%
+int findUnsortedSubarrayOnOn(vector<int>& nums) {
+    // 第一个存在下一个更小元素的记为left
+    // 下一个更小即降序，所以应使用递增栈；
+    // 从左到右遍历，弹出是解(*top > *i)；
+    // 有相同元素，栈中存下标
+    int n=nums.size();
+    if(n<=1)
+        return 0;
+    
+    stack<int> st;
+    vector<int> temp(nums.size(), -1);
+    for(int i=0;i<n;++i) {
+        while(!st.empty() && nums[st.top()] > nums[i]) {
+            // 解*top > *i;
+            temp[st.top()]=i;
+            st.pop();
+        }
+        st.push(i);
+    }
+    if(st.size()==n) // 全部升序
+        return 0;
+    int left=0;
+    while(left<n) {
+        if(temp[left]!=-1)
+            break;
+        left++;
+    }
+    
+    // 上一个更大元素，递减栈；从右到左遍历，弹出是解(*top < *i)
+    while(!st.empty()) {
+        st.pop();
+    }
+    temp.clear();
+
+    for(int i=n-1;i>=left;--i) {
+        while(!st.empty() && nums[st.top()] < nums[i]) {
+            // 解 *top < *i
+            temp[st.top()]=i;
+            st.pop();
+        }
+        st.push(i);
+    }
+    int right = n-1;
+    while(right>=0) {
+        if(temp[right]!=-1)
+            break;
+        right--;
+    }
+    return right-left+1;
+}
+// TODO: 思路3：标答：O(n), O(1)
+// 将nums分成3部分numsA, numsB, numsC, 设numsB是我们要求的需要排序的最短子数组
+// 则有for all numsA[i], for all numsB[j], for all numsC[k], numsA[i] < numsB[j] < numsC[k]
+// * 例如left可以看成从右到左遍历，最后一个nums[i]> min{nums[i+1, n)}的i, 即从右到左最后一个不满足单调性质的i；
+// * 例如right可以看成从左到到遍历，最后一个nums[i]< max{nums[0, i)}的i
+// 利用此性质，和O(1)时间更新min的技巧，可以O(n), O(1)解决此问题；
+// 且left, right可以一次遍历同时求出；
 
 
 int main()
@@ -1684,6 +1822,22 @@ int main()
     vector<vector<int>> people{{7,0},{4,4},{7,1},{5,0},{6,1},{5,2}};
     printVectorVector(people);
     printVectorVector(reconstructQueueAns(people));
+
+    cout<<"找到所有数组中消失的数字"<<endl;
+    nums.assign({4,3,2,7,8,2,3,1});
+    printVector(findDisappearedNumbersOnO1(nums));
+    nums.assign({1,1});
+    printVector(findDisappearedNumbersOnO1(nums));
+
+    cout<<"最短无序连续子数组"<<endl;
+    nums.assign({2,6,4,8,10,9,15});
+    cout<<findUnsortedSubarrayOnOn(nums)<<endl; // 5
+    nums.assign({1,2,3,4});
+    cout<<findUnsortedSubarrayOnOn(nums)<<endl; // 0
+    nums.assign({2,1});
+    cout<<findUnsortedSubarrayOnOn(nums)<<endl; // 2
+    nums.assign({1,3,2,2,2});
+    cout<<findUnsortedSubarrayOnOn(nums)<<endl; // 2
 
     return 0;
 }

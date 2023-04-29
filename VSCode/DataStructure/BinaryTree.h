@@ -51,7 +51,8 @@ vector<int> getLevelOrderExpand(TreeNode* root, bool removeLastNULL = true, int 
         ans.pop_back();
     return ans;
 }
-// BFS返回层次序
+
+// * BFS返回层次序
 vector<int> getLevelOrder(TreeNode* root) {
     if(root == NULL)
         return {}; // 注意不是{{}}，虽然两者输出一样，但{{}}的第一个vector不为空；
@@ -109,6 +110,7 @@ void printLevelOrderWithNullNum(TreeNode* root, bool expand = true, int nullNum 
     cout<<endl;
 }
 
+// * 中序遍历
 void printInOrderSubnet(TreeNode *r) {
 	if (r==NULL)
 		return;
@@ -119,6 +121,22 @@ void printInOrderSubnet(TreeNode *r) {
 void printInOrder(TreeNode *root, string name="binary tree") {
 	cout << name << "\' InOrder = ";
 	printInOrderSubnet(root);
+    cout<<endl;
+}
+
+
+// * 反中序遍历；
+void printReverseInOrderSubnet(TreeNode* bstRoot) {
+    if(bstRoot==NULL)
+        return;
+    
+    printReverseInOrderSubnet(bstRoot->right);
+    cout<< bstRoot->val<<" ";
+    printReverseInOrderSubnet(bstRoot->left);
+}
+void printReverseInOrder(TreeNode *root, string name="binary tree") {
+	cout << name << "\' ReverseInOrder = ";
+	printReverseInOrderSubnet(root);
     cout<<endl;
 }
 

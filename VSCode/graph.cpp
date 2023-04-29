@@ -3,6 +3,39 @@
 using namespace std;
 
 // * 邻接表表示的图
+// 即vector<vector<int>> graph; graph[i]表示节点i的邻接节点；(不容易表示有权图)
+
+// 剑指 Offer II 110. 所有路径
+// n个节点的DAG图，找出0->n-1的所有路径；dfs
+// 击败95%, 91%
+void dfsAllPathsSourceTarget(vector<vector<int>> &graph, vector<int> &path, int start, int end, vector<vector<int>> &ans) {
+    // start即当前path下一步可能要走的点，end即目标节点；
+    // 出口
+    if(start==end) {
+        // 最终节点
+        path.push_back(end);
+        ans.push_back(path);
+        path.pop_back();
+        return;
+    }
+
+    path.push_back(start);
+    for(int node: graph[start]) {
+        dfsAllPathsSourceTarget(graph, path, node, end, ans);
+    }
+    path.pop_back();
+}
+vector<vector<int>> allPathsSourceTarget(vector<vector<int>>& graph) {
+    assert(graph.size()>=2);
+
+    vector<int> path;
+    vector<vector<int>> ans;
+    dfsAllPathsSourceTarget(graph, path, 0, graph.size()-1, ans);
+    return ans;
+}
+
+// * 边表示的图
+// 即vector<vector<int>> edges; edges[i]若只有两个值，表示边edges[i][0]->edges[i][1]；可以有三个值(很少用)，边edges[i][0]->edges[i][1]和边权重edges[i][2]
 
 // 207. 课程表
 // 思路1：DFS判环，无环就行；击败9%, 97%;
@@ -77,6 +110,7 @@ vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
 }
 
 // * 邻接矩阵表示的图
+// 即n*n的矩阵vector<vector<int/bool>> graph; graph[i][j]若为bool则表示i->j的边是否存在， 若为int则可表示i->j的边权重；
 
 int main() {
     cout<<"课程表"<<endl;
@@ -97,6 +131,10 @@ int main() {
 
     prerequisites.assign({{1,4},{2,4},{3,1},{3,2}});
     printVector(findOrder(5, prerequisites));
+
+    cout<<"所有路径"<<endl;
+    vector<vector<int>> graph{{1,2},{3},{3},{}};
+    printVectorVector(allPathsSourceTarget(graph));
 
     return 0;
 }

@@ -1,4 +1,5 @@
 #include"DataStructure/String.h"
+#include"DataStructure/array.h"
 #include<vector>
 #include<iomanip>
 #include<assert.h>
@@ -575,6 +576,44 @@ string decodeString(string s) {
     return ans;
 }
 
+// 438. 找到字符串中所有字母异位词 (子串)
+// 滑动窗口，击败93%, 84%
+vector<int> findAnagrams(string s, string p) {
+    if(s.size()<p.size()) {
+        return {};
+    }
+    // 滑动窗口
+    int left=0, right= p.size();
+    // 子串：[left, right), len = right - left == p.size();
+
+    vector<int> target(26,0);
+    for(int i=0;i<right;++i) {
+        target[p[i]-'a']++;
+    }
+    vector<int> count(26,0);
+    for(int i=0;i<right;++i) {
+        count[s[i]-'a']++;
+    }
+
+    vector<int> ans;
+    if(target==count)
+        ans.push_back(left);
+
+    while(right<s.size()) { // ! 保证s[right]合法
+        // 先迭代再判断，遗漏了最开始的；
+        count[s[left]-'a']--;
+        left++;
+        count[s[right]-'a']++;
+        right++;
+
+        if(target==count) {
+            ans.push_back(left);
+        }
+    }
+
+    return ans;
+}
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；
@@ -672,7 +711,11 @@ int main() {
     cout<<"字符串解码"<<endl;
     cout<<decodeString("3[a]2[bc]")<<endl;
     cout<<decodeString("3[2[bc]]")<<endl;
-    cout<<decodeString("100[leetcode]")<<endl;
+    // cout<<decodeString("100[leetcode]")<<endl;
+
+    cout<<"找到字符串中所有字母异位词"<<endl;
+    printVector(findAnagrams("cbaebabacd", "abc"));
+    printVector(findAnagrams("abab", "ab"));
 
     return 0;
 }

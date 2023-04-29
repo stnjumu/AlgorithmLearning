@@ -18,6 +18,8 @@ int main()
     cin.tie(nullptr);
     cout.tie(nullptr);
 
+    cout<<-1%2<<endl;
+
     vector<int> v{1,2,2,4,8};
     ostream_iterator<int> output(cout,"*");
     copy(v.begin(),v.end(),output);
@@ -31,7 +33,7 @@ int main()
     in>>delimiter;
     cout<<delimiter<<endl;
     int a=-1;
-    bool flag = int(in>>a);
+    bool flag = bool(in>>a);
     cout<<flag<<endl;
     in>>delimiter;
     cout<<delimiter<<endl;
