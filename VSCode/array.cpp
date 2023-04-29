@@ -1425,11 +1425,12 @@ vector<vector<int>> reconstructQueueAns(vector<vector<int>>& people) {
     });
     vector<vector<int>> ans;
     for (const vector<int>& person: people) {
-        if(person[1]>ans.size()) { // ! 标答没这句话，我觉得有问题；ki比ans现有元素大，则插入队尾；
-            ans.push_back(person);
-        }
-        else
-            ans.insert(ans.begin() + person[1], person);
+        assert(person[1]<=ans.size());
+        // if(person[1]>ans.size()) { // ! 标答没这句话，分析知；不可能出现ki比ans现有元素个数大，因为插入顺序保证了比person大的都提前插入了
+        //     ans.push_back(person);
+        // }
+        // else
+        ans.insert(ans.begin() + person[1], person);
     }
     return ans;
 }
