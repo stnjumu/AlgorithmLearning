@@ -7,6 +7,11 @@
 #include<unordered_map>
 using namespace std;
 
+/*
+回文子串(最长或个数)：dp: O(n^2),O(n^2); 双指针中心拓展: O(n^2), O(1); Manacher算法: O(n),O(n);
+
+*/
+
 void back_trace_binary_watch(int turnedOn, int start, vector<int> &hours, vector<int> &minutes, vector<string> &ans) {
     // start: 0-3表示小时，4以上表示分钟;
     if(turnedOn == 0) {
@@ -187,8 +192,10 @@ string longestPalindrome2(string s) {
     }
     return s.substr(maxLeft, maxLen);
 }
-// 思路3：Manacher算法，O(n) O(n)
+// TODO: 思路3：Manacher算法，O(n) O(n)
 // 利用之前遍历过的回文串的长度，可知，遍历一个回文串右边字符时，其在回文串内部的信息与右边对应字符信息有关系；
+// 此O(n)算法在n很大且回文串很多时才会体现出来优势；
+// * 学习其处理偶数长度子串的做法：在每两个相邻字符间插入#占位符，则可转换为奇数长度子串；abaa -> #a#b#a#a#
 // https://leetcode.cn/problems/longest-palindromic-substring/solution/zui-chang-hui-wen-zi-chuan-by-leetcode-solution/
 
 // 10. 正则表达式匹配
@@ -614,6 +621,87 @@ vector<int> findAnagrams(string s, string p) {
     return ans;
 }
 
+// 647. 回文子串
+// 思路1：dp, dp[i, j]表示s[i,j]是否回文子串, i<=j; (dp数组只有右上角一半有效)
+// dp[i,j] = dp[i+1, j-1] && nums[i]==nums[j]; 
+// 假设i向下增大，j向右增大，则dp[i,j]依赖于左下角；
+// O(n^2), O(n^2), 击败10%, 50%
+// ! 注意此题的时间下界是O(n), 千万别误认为是O(n^2)，注意回文子串是有规律的；
+int countSubstrings(string s) {
+    int n=s.size();
+    if(n<=1)
+        return n;
+    vector<vector<bool>> dp(n, vector<bool>(n, false));
+    // [i,i]
+    for(int i=0;i<n;++i) {
+        dp[i][i]=true;
+    }
+    // [i,i+1]
+    for(int i=0;i<n-1;++i) {
+        dp[i][i+1]= s[i]==s[i+1];
+    }
+
+    // [i,i+2]开始，[0, 2]
+    // ! 由于依赖于左下角，所以应该一列一列向下计算或一行一行向上计算；(i, j遍历先后顺序问题)
+    // 选择一列一列向下
+    // for(int j=2;j<n;++j) {
+    //     for(int i=0;i<=j-2;++i) { // ! 判断好区间，即i,j遍历范围
+    //         dp[i][j] = dp[i+1][j-1] && s[i]==s[j];
+    //     }
+    // }
+    // 选择一行一行向上
+    for(int i=n-1;i>=0;--i) {
+        for(int j=i+2;j<n;++j) { // ! 判断好区间，即i,j遍历范围
+            dp[i][j] = dp[i+1][j-1] && s[i]==s[j];
+        }
+    }
+    // printVectorVector(dp);
+    int count = 0;
+    for(int i=0;i<n;++i) {
+        for(int j=0;j<n;++j) {
+            if(dp[i][j])
+                count++;
+        }
+    }
+    return count;
+}
+// 思路2：双指针
+// 根据dp分析(画一下求dp矩阵时所有坐标的依赖图)可知，所有dp[i,j]都是从对角线dp[i,i]和dp[i,i+1]向右上递推得到；
+// dp[i,i]递推得到的是所有以s[i]为中心的奇数长度回文子串；dp[i,i+1]则是所有偶数长度回文子串，中心则是s[i]和s[i+1]中间；
+// O(n^2), O(1), 击败88%, 99%
+int countSubstringsOnnO1(string s) {
+    int n=s.size();
+    if(n<=1)
+        return n;
+    
+    int count = 0;
+    int left, right;
+    // 奇数长度
+    for(int i=0;i<n;++i) {
+        left=right=i;
+        while(left>=0 && right<n && s[left]==s[right]) {
+            count++;
+            left--;
+            right++;
+        }
+    }
+
+    // 偶数长度
+    for(int i=0;i<n-1;++i) {
+        left=i;
+        right=i+1;
+        while(left>=0 && right<n && s[left]==s[right]) {
+            count++;
+            left--;
+            right++;
+        }
+    }
+
+    return count;
+}
+// TODO: 思路3：Manacher算法, 对上面5. 最长回文子串的小改动；
+// O(n), O(n);
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；
@@ -716,6 +804,14 @@ int main() {
     cout<<"找到字符串中所有字母异位词"<<endl;
     printVector(findAnagrams("cbaebabacd", "abc"));
     printVector(findAnagrams("abab", "ab"));
+
+    cout<<"回文子串"<<endl;
+    cout<< countSubstrings("abc")<<endl;
+    cout<< countSubstrings("aaa")<<endl;
+    cout<< countSubstrings("abccba")<<endl;
+    cout<< countSubstringsOnnO1("abc")<<endl;
+    cout<< countSubstringsOnnO1("aaa")<<endl;
+    cout<< countSubstringsOnnO1("abccba")<<endl;
 
     return 0;
 }

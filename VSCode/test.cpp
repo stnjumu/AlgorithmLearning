@@ -12,30 +12,21 @@ void printVectorOstreamIterator(vector<T> nums, string name = "vector") {
     cout<<endl;
 }
 
+void f(){ cout<<"f"<<endl;}
+
 int main()
 {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
     cout.tie(nullptr);
 
-    cout<<-1%2<<endl;
-
-    vector<int> v{1,2,2,4,8};
-    ostream_iterator<int> output(cout,"*");
-    copy(v.begin(),v.end(),output);
-    cout<<endl;
-
-    vector<string> strs{"hello", "world", "!"};
-    printVectorOstreamIterator(strs, "iterator output");
-
-    istringstream in("[]");
-    char delimiter;
-    in>>delimiter;
-    cout<<delimiter<<endl;
-    int a=-1;
-    bool flag = bool(in>>a);
-    cout<<flag<<endl;
-    in>>delimiter;
-    cout<<delimiter<<endl;
+    const int a = 10;
+    const int *p = &a;
+    int *q;
+    q = const_cast<int *>(p);
+    cout <<a<<" "<<*p<<" "<<*q<<endl;
+    *q = 20;    //fine
+    cout <<a<<" "<<*p<<" "<<*q<<endl; // 10 20 20
+    cout <<&a<<" "<<p<<" "<<q<<endl;
     return 0;
 }
