@@ -436,6 +436,25 @@ int largestRectangleArea(vector<int>& heights) {
 
 // TODO: 907. 所有子数组最小元素之和: https://zhuanlan.zhihu.com/p/103562972
 
+// 739. 每日温度
+// O(n),O(n), 击败33%, 67%
+vector<int> dailyTemperatures(vector<int>& temperatures) {
+    // 单调栈简单应用
+    // 下一个更高温度(在第几天后)，单调递减栈，从左往右遍历，弹出是解；
+    // 要求下标之差，也可能有相同温度，所以使用栈存下标；
+    stack<int> stDecreasing;
+    vector<int> ans(temperatures.size(), 0);
+    for(int i=0;i<temperatures.size();++i) {
+        while(!stDecreasing.empty() && temperatures[stDecreasing.top()] < temperatures[i]) {
+            // 弹出解：*top < *i
+            ans[stDecreasing.top()] = i-stDecreasing.top();
+            stDecreasing.pop();
+        }
+        stDecreasing.push(i);
+    }
+    return ans;
+}
+
 int main()
 {
     cout<<"最小栈"<<endl;
@@ -509,5 +528,10 @@ int main()
     cout<<"柱状图中最大的矩形"<<endl;
     vector<int> heights{2,1,5,6,2,3};
     cout<<largestRectangleArea(heights)<<endl;
+
+    cout<<"每日温度"<<endl;
+    nums1.assign({73,74,75,71,69,72,76,73});
+    printVector(dailyTemperatures(nums1));
+
     return 0;
 }
