@@ -373,6 +373,46 @@ vector<double> dicesProbability2(int n) {
     }
     return dp_old;
 }
+// 优化：观察发现，n个骰子最小点数为n, 最大点数为6n; 且概率的分母都是6^n;
+// 定义概率为dp数组，dp[i, j]表示i个骰子的点数为j的概率，j in [n, 6n], dp[n]是所求, dp[1] = [1/6, 1/6, ..., 1/6]
+// 拆分概率事件i个骰子点数为j的概率为6个事件的概率之和：1个骰子点数为k, k in [1, 6], 概率都是1/6; i-1个骰子点数为j-k；
+// dp[i, j] = ( \sum_k dp[i-1, j-k] )/6, k in [1, 6]
+// 需要保证j-k在dp[i, :]中有意义，超界概率为0；
+// 所有dp[i, :]数组下标减去i，可以使其下标从0开始；
+// 由于概率的分母都是6^n，可以用dp数组统计基本事件的次数(古典概型)；则上面dp递推式中不需要再/6
+// 击败100%, 24%, 内存比之前多了一点点；
+vector<double> dicesProbability3(int n) {
+    vector<int> dp_old(6,1);
+    if(n > 1) {
+        int i=2;
+        while(i<=n) {
+            // dp_old = dp[i-1, :], 求dp_new = dp[i, :]
+            int new_max = i * 6, new_min = i * 1;
+            vector<int> dp_new(new_max-new_min+1, 0);
+            int old_max = new_max-6, old_min = new_min-1;
+            for(int j = new_min; j<=new_max; j++) {
+                // dp[i, j], j in [new_min, new_max]
+                for(int k= 1; k<=6; k++) { // k in [1, 6]
+                    if(j-k>=old_min && j-k<=old_max) // dp[i-1, j-k]有意义
+                    {
+                        dp_new[j-new_min]+= dp_old[j-k-old_min]; // 基本事件计数
+                    }
+                }
+            }
+            // assert(dp_new.size()==new_max-new_min+1);
+            dp_old.swap(dp_new); // O(1)时间交换；
+            // dp_old.assign(dp_new.begin(), dp_new.end());
+            i++;
+        }
+    }
+
+    vector<double> ans;
+    double div = pow(6.0, n);
+    for(int i=0;i<dp_old.size();++i)
+        ans.push_back(dp_old[i]/div);
+    
+    return ans;
+}
 
 // 121. 买卖股票的最佳时机
 // 历史最低
