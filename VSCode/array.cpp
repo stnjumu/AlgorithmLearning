@@ -15,10 +15,33 @@ using namespace std;
 
 // 42. 接雨水
 
-// 思路3：单调栈
-
-// TODO: 思路2：动态规划
+// 思路0：暴力
 // 每个位置填充水后的高度由其左边最高柱子和其右边最高柱子共同决定，当然它本身的高度也会影响是否需要填充；
+// O(n^2), 超时
+int trap0(vector<int>& height) {
+    // 每个位置求其左边最高和右边最高即可；
+    int n = height.size();
+    int ans =0;
+    for(int i=0;i<n;++i) {
+        int maxLeft = 0, maxRight = 0;
+        for(int j=0;j<i;++j) {
+            if(maxLeft<height[j])
+                maxLeft = height[j];
+        }
+        for(int j=i+1;j<n;++j) {
+            if(maxRight<height[j])
+                maxRight = height[j];
+        }
+
+        int minMaxLeftRight = min(maxLeft, maxRight);
+        if(minMaxLeftRight>height[i]) {
+            // 能接到雨水
+            ans += minMaxLeftRight-height[i];
+        }
+    }
+    return ans;
+}
+
 
 // 思路1：我的实现；(已实现)
 // 双向填充，先从左到右，对每个位置，找到之后第一个不小于它的柱子，填充上雨水；
@@ -69,6 +92,84 @@ int trap1(vector<int> &height) {
     }
     return ans;
 }
+// 思路2：dp
+// 根据暴力方法可知，求maxLeft和maxRight的过程存在大量重复计算；
+// 简单写一写就可以发现，可以O(n)时间内求maxLeft或maxRight
+// O(n), O(n), 击败83%, 9%;
+// 可选优化，maxLeftArray和maxRightArray可以合并成一个，因为只需要两者中的最小值；
+// * 可选优化，将maxLeft定义为i和i左边元素的最大值，maxRight定义为i和i右边元素的最大值；可以更简单一些；
+int trap2(vector<int> &height) {
+    int n = height.size();
+    vector<int> maxLeftArray(n, 0), maxRightArray(n, 0);
+
+    // maxLeft
+    int maxLeft = 0;
+    for(int i=0;i<n;++i) {
+        // 先设置maxLeftArray
+        maxLeftArray[i] = maxLeft;
+
+        if(maxLeft < height[i])
+            maxLeft = height[i];
+    }
+    // maxRight
+    int maxRight = 0;
+    for(int i=n-1;i>=0;--i) {
+        // 先设置maxRightArray
+        maxRightArray[i] = maxRight;
+
+        if(maxRight < height[i])
+            maxRight = height[i];
+    }
+
+    int ans =0;
+    for(int i=0;i<n;++i) {
+        int minMaxLeftRight = min(maxLeftArray[i], maxRightArray[i]);
+        if(minMaxLeftRight>height[i])
+            ans += minMaxLeftRight - height[i];
+    }
+    return ans;
+}
+// 击败83%, 61%
+int trap2_better(vector<int> &height) {
+    int n = height.size();
+    vector<int> minMaxLeftRight(n, 0);
+
+    // maxLeft
+    int maxLeft = 0;
+    for(int i=0;i<n;++i) {
+        // 求i即i左边的最大值；
+        maxLeft = max(maxLeft, height[i]);
+
+        minMaxLeftRight[i] = maxLeft;
+    }
+    // maxRight, minMax, ans
+    int maxRight = 0;
+    int ans =0;
+    for(int i=n-1;i>=0;--i) {
+        // 求i即i右边的最大值；
+        maxRight = max(maxRight, height[i]);
+        
+        minMaxLeftRight[i] = min(minMaxLeftRight[i], maxRight);
+        ans += minMaxLeftRight[i]-height[i];
+    }
+
+    return ans;
+}
+// 思路3：单调栈； 不懂, O(n),O(n)
+// TODO: 思路4：双指针, O(n), O(1)
+// * 注意：maxLeft可以定义为i左边所有元素的max(可能接到负的雨水，需要判断)，也可以定义为i即i左边所有元素的max(接到雨水最少为0，不需额外判断)
+// 思路4采用后者：maxLeft定义为i即i左边所有元素的max；maxRight类似；
+// 注意到：left从0开始，right从n-1开始；并先更新maxLeft, maxRight；
+// 刚开始if *left<*right, 有maxLeft==*left < *right==maxRight, 即 maxLeft < maxRight; 
+//      此时left的能接的雨水刚好能确定，因为被maxleft限制住了，而右边又有大于maxLeft的maxRight，所以可以确定，当然这只是刚开始，且接的水一定是0；
+// if *left>=*right, 有maxLeft==*left >= *right==maxRight, 即 maxLeft >= maxRight; 同理可确定right能接的水(当然一定为0)；
+// 我们贪心地选择填充left和right中较小地一个，之后移动填充后的那个，并更新maxLeft, maxRight; 相等则选择right.
+// 则对任意时刻，有*left<=maxLeft, *right<=maxRight;
+// ! 我们需要证明定理1: 对任意时刻，还有if *left<*right, then maxLeft < maxRight; if *left>=*right, then maxLeft >= maxRight.
+// 可以只证明其中一条，另一条同理可证；对于if *left<*right, then maxLeft < maxRight. (我已尝试，直接用数学归纳法证明不了)
+// 可以先证个引理，if *left<*right, then *right是当目前为止遇到的最大值，即 *right = max(maxLeft, maxRight); 根据贪心选择策略，引理显然成立。由引理易得*right = maxRight
+// 根据引理，则有if *left<*right, then *right = max(maxLeft, maxRight) = maxRight; 有 maxLeft <= maxRight, 根据贪心选择策略中，相等会选right, 则 maxLeft < maxRight.
+// 由上，定理1可证;
 
 // 54. 螺旋矩阵
 vector<int> spiralOrder(vector<vector<int>>& matrix) {
