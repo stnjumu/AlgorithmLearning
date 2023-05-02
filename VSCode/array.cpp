@@ -156,6 +156,7 @@ int trap2_better(vector<int> &height) {
     return ans;
 }
 // 思路3：单调栈； 不懂, O(n),O(n)
+
 // TODO: 思路4：双指针, O(n), O(1)
 // * 注意：maxLeft可以定义为i左边所有元素的max(可能接到负的雨水，需要判断)，也可以定义为i即i左边所有元素的max(接到雨水最少为0，不需额外判断)
 // 思路4采用后者：maxLeft定义为i即i左边所有元素的max；maxRight类似；
@@ -963,6 +964,7 @@ bool canJump(vector<int>& nums) {
     return flag[n-1];
 }
 // 优化去掉flag数组，换成能够到达的最远下标max, 维护max即可；击败58%, 35%
+// 因为有定理：如果能够跳到位置max, 则能跳到所有位置i, i<=max
 bool canJump2(vector<int>& nums) {
     int i=0, n=nums.size();
     if(n==1) {
@@ -1124,6 +1126,7 @@ int lengthOfLIS_Onlogn(vector<int>& nums) {
 // ! linear select, 线性时间选择；
 // 215. 数组中的第K个最大元素；
 // 思路1：partition，平均复杂度O(n),空间O(logn)，证明见算法导论9.2, 击败76%, 39%
+// 这里借用了STL partition，自己实现见Array.h
 // 可选：找第k(从1开始)大元素等价于第n-k(从0开始)小元素或第n-k+1(从1开始)小元素；
 int myPartition(vector<int> &nums, int start, int end) {
     // 至少3个数；
@@ -1204,6 +1207,7 @@ vector<int> productExceptSelf(vector<int>& nums) {
 }
 
 // 279. 完全平方数
+// n能拆分成完全平方数的和形式，求这些拆分中完全平方数的最少个数；
 // 思路1：类背包问题的递归解法，击败14%, 5%
 // 可选优化，代码可以写的更简洁
 int getDPn_backtrace(vector<int> &squares, vector<int> &dp, int n) {
@@ -1272,7 +1276,10 @@ int numSquaresDP(int n) {
 // 思路3：数学定理，所有正整数都可以表示成不超过4个正整数平方和的形式，详见https://leetcode.cn/problems/perfect-squares/solution/wan-quan-ping-fang-shu-by-leetcode-solut-t99c/
 
 // 283. 移动零
+// 原地将数组中0移到数组末尾，保持原来的相对顺序；
 // 双指针，击败98%, 5%
+// 下面这种方法就是array.h中mypartitionOnO1的双指针法，就是判断条件从小于pivot变成了不是0；
+// 由此，可知可选优化：left==right时可不swap; 还可实现双端游走；
 void moveZeroes(vector<int>& nums) {
     int left=0, right=0;
     while(right<nums.size()) {
@@ -1298,6 +1305,7 @@ int maxCoins(vector<int>& nums) {
 }
 
 // ! 322. 零钱兑换
+// 求最少硬币个数；
 // 回溯法
 int minCountCoinChange;
 vector<int> minCountOfAmounts;
@@ -1406,7 +1414,8 @@ int BUGcoinChange(vector<int>& coins, int amount) {
     return minCountCoinChange<10001? minCountCoinChange: -1;
 }
 // 官方记忆化搜索代码思路：记录所有探索过的子问题，包括有解子问题和无解子问题；
-// * 最优思路：dp
+// * 最优思路：一维dp
+// 零钱兑换II需要记录组合个数，则需要二维dp, 本题二维dp也能做；
 // O(MN), M=amount.size(), n = coins.size(); 击败31%, 59%
 int coinChange(vector<int>& coins, int amount) {
     // 子问题的定义最为关键，dp[i]为兑换amount=i需要的最少硬币个数；
@@ -1422,6 +1431,77 @@ int coinChange(vector<int>& coins, int amount) {
         }
     }
     return dp[amount]<10001? dp[amount] : -1;
+}
+
+// 518. 零钱兑换II
+// 求兑换组合个数；
+// amount=0时空集也算一种，返回1;
+// 击败9%, 11%
+// 空间可优化到O(amount)
+int change(int amount, vector<int>& coins) {
+    // 二维dp
+    // dp[i,j]表示使用前i(从0开始)种coin能够兑换j的组合数；
+    // dp[i,j] = dp[i-1, j]       , 不使用coin[i]
+    //          + dp[i, j-coin[i]], 使用coin[i]
+    vector<vector<int>> dp(coins.size(), vector<int>(amount+1, 0));
+    for(int k=0;k*coins[0]<=amount;++k) {
+        dp[0][k*coins[0]]=1; // 很容易理解；
+    }
+    for(int i=0;i<coins.size();++i) {
+        dp[i][0]=1; // 比较难理解
+    }
+
+    for(int i=1;i<coins.size();++i) {
+        for(int j=1;j<=amount;++j) {
+            dp[i][j]=dp[i-1][j]; // 不使用第i种coin
+            if(j-coins[i]>=0) {
+                // 可以使用第i种coin
+                dp[i][j]+= dp[i][j-coins[i]];
+            }
+        }
+    }
+    return dp.back().back();
+}
+// 将上面二维dp的代码优化空间到O(amount)即标答
+// 击败30%, 82%
+int change2(int amount, vector<int>& coins) {
+    // 原二维dp
+    // dp[i,j]表示使用前i(从0开始)种coin能够兑换j的组合数；
+    // dp[i,j] = dp[i-1, j]       , 不使用coin[i]
+    //          + dp[i, j-coin[i]], 使用coin[i]
+    // 一行一行遍历，则遍历到dp[i,j]时，如果只有一行存储dp[j]，则dp[j]刚好是dp[i-1,j]，dp[j-coin[i]]刚好是本行更新后的dp[i, j-coin[i]]
+    vector<int> dp(amount+1, 0);
+    dp[0]=1;
+
+    for(int i=0;i<coins.size();++i) {
+        for(int j=1;j<=amount;++j) {
+            if(j-coins[i]>=0)
+                dp[j]+= dp[j-coins[i]]; // 对比上面代码，可以发现就是把dp[i-1][j]累加到dp[i][j]上了；
+        }
+    }
+    return dp.back();
+}
+// 由下可知，本题只能二维dp，二维dp可优化空间成一维；
+// 一维dp不行；猜测原因是本题求的是组合数，一维dp无法区分先选coin i再选coin j和先选coin j再选coin i，会多次计数；也不是排列数，因为两个相同的coin也会重复计数；
+// 二维dp可确保coin i和coin j的先后顺序，所以可以求组合数；
+
+// ! 下面的一维dp是错的， 错在了组合数，相同的coin算了非常多次，感觉比排列数都多了；本身思路就错了；
+int changeError(int amount, vector<int>& coins) {
+    assert(0); // 错误
+    // dp[i]表示j的组合个数；
+    // dp[i]= \sum_j (dp[i-coin[j]]), i-coin[j]>=0
+    // dp[0]=1;
+
+    vector<int> dp(amount+1, 0);
+    dp[0]=1;
+
+    for(int i=1;i<=amount;++i) {
+        for(int j=0;j<coins.size();++j) {
+            if(i-coins[j]>=0)
+                dp[i]+=dp[i-coins[j]];
+        }
+    }
+    return dp.back();
 }
 
 // 347. 前K个高频元素
@@ -1717,6 +1797,32 @@ int findUnsortedSubarrayOnOn(vector<int>& nums) {
 
 int main()
 {
+    cout<<"测试mypartition"<<endl;
+    vector<int> nums{4,2,0,3,2,5};
+    mypartitionOnO1(nums,3);
+    printVector(nums);
+
+    nums.assign({5,9,2,1,4,7,5,8,3,6});
+    mypartitionOnO1(nums,5);
+    printVector(nums);
+
+    nums.assign({1,2,3,4,5,6,7,8,9,10});
+    mypartitionOnO1(nums,3);
+    printVector(nums);
+
+    nums.assign({3,2,1});
+    mypartitionOnO1(nums,2);
+    printVector(nums);
+
+    nums.assign({3});
+    mypartitionOnO1(nums,3);
+    printVector(nums);
+
+    nums.assign({});
+    mypartitionOnO1(nums,3);
+    printVector(nums);
+
+
     cout<< "接雨水"<<endl;
     vector<int> height{0,1,0,2,1,0,1,3,2,1,2,1};
     cout<< trap1(height)<<endl;
@@ -1794,7 +1900,7 @@ int main()
     cout<< maxProfit6(prices,3)<<endl; // 6
 
     cout<< "找出所有子集的异或总和再求和" << endl;
-    vector<int> nums{1,3};
+    nums.assign({1,3});
     cout<< subsetXORSum(nums)<<endl;
 
     nums.assign({5,1,6});
@@ -1944,6 +2050,14 @@ int main()
     cout<<coinChange(nums, 4129)<<endl; // 10
     nums.assign({186,419,83,40}); 
     cout<<coinChange(nums, 6249)<<endl; // 25
+
+    cout<<"零钱兑换II"<<endl;
+    nums.assign({1,2,5});
+    cout<<change2(5, nums)<<endl; // 4
+    nums.assign({2});
+    cout<<change2(3, nums)<<endl; // 0
+    nums.assign({1,2,5,10});
+    cout<<change2(35, nums)<<endl; // 140
 
     cout<<"前K个高频元素"<<endl;
     nums.assign({1,1,1,2,2,3});
