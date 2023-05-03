@@ -4,6 +4,10 @@
 #include<iostream>
 using namespace std;
 
+/*
+list库就是双向链表；
+*/
+
 struct DLinkedNode {
     int value;
     DLinkedNode* prev;

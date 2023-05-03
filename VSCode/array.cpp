@@ -1658,6 +1658,7 @@ vector<vector<int>> reconstructQueueAns(vector<vector<int>>& people) {
 }
 
 // 448. 找到所有数组中消失的数字
+// 给定n个数的nums数组，所有数均在[1,n]内，找出所有[1,n]中未出现数字；
 // 思路1：直接法：O(n), O(n), 击败71%, 38%
 vector<int> findDisappearedNumbers(vector<int>& nums) {
     vector<bool> appear(nums.size(),false);

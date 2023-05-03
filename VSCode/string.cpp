@@ -9,7 +9,7 @@ using namespace std;
 
 /*
 回文子串(最长或个数)：dp: O(n^2),O(n^2); 双指针中心拓展: O(n^2), O(1); Manacher算法: O(n),O(n);
-
+TODO: O(n)字符串匹配, KMP算法; string库接口：string s, t; int pos = s.find(t); 没找到返回-1;
 */
 
 void back_trace_binary_watch(int turnedOn, int start, vector<int> &hours, vector<int> &minutes, vector<string> &ans) {

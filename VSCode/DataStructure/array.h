@@ -3,6 +3,8 @@
 #include<iostream>
 #include<vector>
 #include<iterator>
+#include<algorithm>
+#include<numeric>
 #include<assert.h>
 // #include<VECTOR> // Window下C++头文件对大小写不敏感；
 using namespace std;

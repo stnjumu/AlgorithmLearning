@@ -1,7 +1,9 @@
-#include <vector>
-#include <iostream>
-#include <iterator>
+#include<vector>
+#include<iostream>
+#include<iterator>
+#include<list>
 #include<sstream>
+#include<algorithm>
 using namespace std;
 
 template<class T>
@@ -19,6 +21,14 @@ int main()
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
     cout.tie(nullptr);
+
+    list<int> x{1,2,3,4,5,6,5};
+    auto it=find(x.begin(),x.end(), 5);
+    // x.remove(5);
+    x.erase(it);
+    for(int n:x)
+        cout<<n<<" ";
+    cout<<endl;
 
     const int a = 10;
     const int *p = &a;
