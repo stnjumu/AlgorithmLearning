@@ -18,10 +18,6 @@ struct TreeNode {
     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
 };
 
-class BinaryTree {
-public:
-
-};
 
 // 重点：分层BFS，见102.；
 
@@ -125,7 +121,8 @@ void printInOrder(TreeNode *root, string name="binary tree") {
 }
 
 
-// * 反中序遍历；
+// * 反中序遍历
+// 反中序遍历得到序列和中序遍历刚好相反, 例如BST反中序遍历刚好反序；
 void printReverseInOrderSubnet(TreeNode* bstRoot) {
     if(bstRoot==NULL)
         return;

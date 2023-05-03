@@ -38,6 +38,7 @@ vector<vector<int>> allPathsSourceTarget(vector<vector<int>>& graph) {
 // 即vector<vector<int>> edges; edges[i]若只有两个值，表示边edges[i][0]->edges[i][1]；可以有三个值(很少用)，边edges[i][0]->edges[i][1]和边权重edges[i][2]
 
 // 207. 课程表
+// 判断是否是DAG
 // 思路1：DFS判环，无环就行；击败9%, 97%;
 bool DFSCanFinish(int course , vector<int> &color, vector<vector<int>> &prerequisites) {
     color[course]=1; // 开始遍历；
@@ -69,9 +70,10 @@ bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {
     return true;
 }
 
-// 拓扑排序，BFS/DFS即可
+// DAG的拓扑排序，BFS/DFS即可
 // 击败9%, 95%
 vector<int> ansFindOrder;
+// 已实现，DFS后序入栈即可；
 bool DFSFindOrder(int course , vector<int> &color, vector<vector<int>> &prerequisites) {
     color[course]=1; // 开始遍历；
     // 前序处理 ...

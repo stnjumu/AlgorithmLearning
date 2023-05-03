@@ -4,6 +4,14 @@
 #include<unordered_map>
 using namespace std;
 
+/*
+常用方法有
+1. 后序遍历 (递归)
+    要求Tree的一些值或性质，抽象成dfs(root)函数，后序遍历是先dfs(left), dfs(right), 再递推root;
+    注意递归出口即可；一般任务可递归到NULL, 而有些特殊任务只能递归到叶子节点，否则可能这条路径形成两个解，见112. 路径总和, 113. 路径总和II, 437. 路径总和III
+        注意递归到叶子节点有时也要考虑root==NULL情况，只是不是解而已；
+*/
+
 // 102. BFS返回层次序的每层；
 // 思路1：两个队列 (我的实现)
 // ! 思路2：每次只遍历队列中LayerSize个元素 (已实现)，我称为分层BFS;
@@ -121,6 +129,8 @@ vector<vector<int>> getZigZagLevelOrder(TreeNode* root) {
     }
     return ans;
 }
+// 思路3: 分层遍历BFS+2个栈；奇数层(从0开始)先遍历左子，偶数层先遍历右子，压入临时栈中，一层遍历完后swap两个栈即可；
+
 // 107. 层次序遍历2，按深度倒序返回，即ans中按照从低到顶，从左到右的顺序；将102.的结果reverse一下即可；
 // 199. 二叉树的右视图：返回每层的最右边的值；分层BFS,但每层只返回最后一个节点的值即可；
 
@@ -210,7 +220,7 @@ int maxDepth(TreeNode* root) {
 
 // 114. 二叉树展开为链表
 // 思路：跟着先序遍历的递归顺序构建新的Tree, 只需一个指针指向上一个节点，然后跟着先序顺序一次挂到上一个指针的右边即可；
-// 注意：需要先用局部变量存了当前节点的左右子树指针后，才能把当前节点的left, right设为NULL；
+// * 注意：需要先用局部变量存了当前节点的左右子树指针后，才能把当前节点的left, right设为NULL；
 // 击败89%, 51%
 TreeNode *lastNode;
 void preOrderFlatten(TreeNode* subtree) {
@@ -234,9 +244,15 @@ void flatten(TreeNode* root) {
     preOrderFlatten(root);
 }
 
-// ! 124. 二叉树中的最大路径和
+// ! 124. 二叉树中的最大路径和 (任意路径)
 // 击败5%, 5%
 // TODO: 改进：getG和GetSMax两者可以合到同一个dfs中去；
+// 分析：可以先定义单向路径sp, 双向路径dp, sp(root)表示以root为端点向下的路径；dp(root)表示root子树中经过root的路径；
+// 注：这里的单向路径和双向路径是我自己为解释此题定义，非通用称呼；
+// 显然有dp(root) = sp(left) + sp(right) + root.val
+// max{dp(root)} = max{sp(left)} + max{sp(right)} + root.val
+// 所求即for all node in Tree, max{max{dp(root)}};
+// 所有节点的max{sp(node)}可以在一次后序遍历过程中求得，而max(dp(root))在获得max{sp(left)}, max{sp(right)}后可以马上得到，由此可知所有node的max{dp(node)}在一次后序遍历中可得；
 unordered_map<TreeNode*, int> G_maxPathSum;
 int ans_maxPathSum;
 void dfsGetG(TreeNode* subtree) {
@@ -324,7 +340,7 @@ TreeNode* invertTree(TreeNode* root) {
 // 236. 二叉树的最近公共祖先
 // 思路：DFS判断节点所在子树中是否有P和Q，后序第一个同时有P,Q的节点就是解；
 // 击败68%, 15%
-// 可选优化，将pair<hasP, hasQ> 优化成一个即可，因为需要的只是hasP&&hasQ;
+// ! 不可以将pair<hasP, hasQ> 优化成一个，虽然需要的只是hasP&&hasQ; 
 TreeNode* ansLowestCommonAncestor;
 pair<bool, bool> DFSHasPQ(TreeNode* root, TreeNode* p, TreeNode* q) {
     if(root == NULL)
@@ -348,13 +364,98 @@ pair<bool, bool> DFSHasPQ(TreeNode* root, TreeNode* p, TreeNode* q) {
     
     return {hasP, hasQ};
 }
+// 想要优化的版本, 但并没有改进； 击败68%, 15%, 
+pair<bool, bool> DFSHasPQ_better(TreeNode* root, TreeNode* p, TreeNode* q) {
+    if(root == NULL)
+        return {false, false};
+    if(ansLowestCommonAncestor!=NULL) {
+        // 已有解，之后所有都不需要遍历了；
+        return {true, true};
+    }
+
+    bool hasP=false, hasQ=false;
+    pair<bool, bool> hasPQ = DFSHasPQ_better(root->left, p, q);
+    hasP = hasPQ.first;
+    hasQ = hasPQ.second;
+    
+    if(ansLowestCommonAncestor!=NULL) {
+        // 已有解，之后所有都不需要遍历了；
+        return {true, true};
+    }
+
+    hasPQ = DFSHasPQ_better(root->right, p, q);
+    hasP = hasP || hasPQ.first;
+    hasQ = hasQ || hasPQ.second;
+
+    if(ansLowestCommonAncestor!=NULL) {
+        // 已有解，之后所有都不需要遍历了；
+        return {true, true};
+    }
+
+    if(root == p)
+        hasP = true;
+    if(root == q)
+        hasQ = true;
+
+    // DFS后序中的第一个同时满足hasP == hasQ == true的节点就是解
+    if(ansLowestCommonAncestor == NULL && hasP && hasQ)
+        ansLowestCommonAncestor = root;
+    return {hasP, hasQ};
+}
 TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
     ansLowestCommonAncestor = NULL;
     DFSHasPQ(root, p, q);
     return ansLowestCommonAncestor;
 }
+// * 求二叉树中两个节点间的最短路径 (需要返回长度和路径)
+// 如果可以的话，可以构造一个无向图然后用dfs求；
+// 如果只能在二叉树上求的话，只能使用类似于二叉树的最近公共祖先的方法了
+vector<TreeNode*> pathSSSP_partP; // p->祖先
+vector<TreeNode*> pathSSSP_partQ; // q->祖先
+pair<bool, bool> DFSHasPQAndGetPath(TreeNode* root, TreeNode* p, TreeNode* q) {
+    if(root == NULL)
+        return {false, false};
+    bool hasP=false, hasQ=false;
+    pair<bool, bool> hasPQ = DFSHasPQAndGetPath(root->left, p, q);
+    hasP = hasPQ.first;
+    hasQ = hasPQ.second;
+    // TODO: 下面这种方法总感觉不太符合直觉，虽然它很正确；寻找有没有更好思路？
+    // ! 如果没有下面这个判断，则最近祖先->整个树的root都会压入到两个vector中；
+    if(!hasP || !hasQ) { // P, Q不同时在左子树中
+        hasPQ = DFSHasPQAndGetPath(root->right, p, q);
+        hasP = hasP || hasPQ.first;
+        hasQ = hasQ || hasPQ.second;
+
+        if(root == p)
+            hasP = true;
+        if(root == q)
+            hasQ = true;
+        
+        // 插入到路径中, p->祖先, q->祖先
+        if(hasP)
+            pathSSSP_partP.push_back(root);
+        if(hasQ)
+            pathSSSP_partQ.push_back(root);
+    }
+    // else P, Q都在左子树中，可以不遍历右子树和root了；
+    return {hasP, hasQ};
+}
+vector<TreeNode*> SSSPOnBinaryTree(TreeNode* root, TreeNode* p, TreeNode* q) {
+    pathSSSP_partP.clear();
+    pathSSSP_partQ.clear();
+    DFSHasPQAndGetPath(root, p, q);
+    pathSSSP_partP.pop_back(); // 祖先出现两次；
+    // 反向插入尾部；
+    while(!pathSSSP_partQ.empty()) {
+        pathSSSP_partP.push_back(pathSSSP_partQ.back());
+        pathSSSP_partQ.pop_back();
+    }
+    return pathSSSP_partP;
+    // * pathSSSP_partP.size()即为路径长度；
+}
 
 // 337. 打家劫舍III
+// 屋子成二叉树排列，不能同时偷相邻的两个屋子，问能偷的最大金额；
 // 击败99%, 85%
 pair<int, int> robSubtree(TreeNode* root) {
     // 递归出口
@@ -370,6 +471,7 @@ pair<int, int> robSubtree(TreeNode* root) {
     // 不偷root, 则可偷可不偷孩子；
     // ! 注意不一定两个孩子都偷是最大的；
     maxRootRobOrNot.second = max(maxLeftRobOrNot.first, maxLeftRobOrNot.second) + max(maxRightRobOrNot.first, maxRightRobOrNot.second);
+    // 返回值first表示偷root能得到的最大值，second表示不偷root能得到的最大值；
     return maxRootRobOrNot;
 }
 int rob(TreeNode* root) {
@@ -620,10 +722,20 @@ int main() {
     cout<<maxPathSum3(root)<<endl;
     deleteBinaryTree(root);
 
+    cout<<"二叉树的最近公共祖先"<<endl;
     root = vectorIntLayerOrder2BinaryTree({3,5,1,6,2,0,8,-1,-1,7,4});
     printLevelOrder(root, true);
     cout<< lowestCommonAncestor(root, root->left, root->right)->val<<endl; // 5, 1的最近祖先为3
     cout<< lowestCommonAncestor(root, root->left, root->left->right->right)->val<<endl; // 5, 4的最近祖先是5
+    deleteBinaryTree(root);
+
+    cout<<"二叉树上最短路径"<<endl;
+    root = vectorIntLayerOrder2BinaryTree({3,5,1,6,2,0,8,-1,-1,7,4});
+    vector<TreeNode*> pathSSSP = SSSPOnBinaryTree(root, root->left->left, root->left->right->right); // 6, 7的最短路径：6, 5, 2, 4
+    cout<<"最短路径= ";
+    for(TreeNode* node: pathSSSP)
+        cout<<node->val<<" ";
+    cout<<endl;
     deleteBinaryTree(root);
 
     cout<<"二叉树的序列化和反序列化"<<endl;

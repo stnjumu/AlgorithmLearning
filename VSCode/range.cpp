@@ -8,6 +8,7 @@
 ST表构造时间O(nlogn), RMQ的时间复杂度O(1), 不支持修改(静态结构)；空间复杂度O(nlog n)
     https://blog.csdn.net/qq_43332980/article/details/107411295
 * 树状数组，Binary Index Tree, BIT, 二进制下标树
+! 以下实现下标必须从1开始，即BIT[0]空闲；要想从0开始则是另一套写法，lowbit函数需要换，因为lowbit(0)=0；
     https://zhuanlan.zhihu.com/p/93795692， 那张图一定要记住
 支持O(logn)时间的单点修改和区间查询；不支持插入删除；
 维护区间A(i-lowbit(i), i]共lowbit(i)个；树结构是此区间所有元素Aj都是元素Ai的孩子；j in range (i-lowbit(i), i)
