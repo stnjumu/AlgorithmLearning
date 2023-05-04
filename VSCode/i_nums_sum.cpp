@@ -45,7 +45,7 @@ vector<int> twoSum2(vector<int>& nums, int target) {
 // 15. 三数之和
 // 暴力法：O(n^3)
 // 二分查找：O(n^2*logn)
-// 双指针：O(n^2)
+// 排序+双指针：O(n^2)
 
 int binarySearch(vector<int> &nums, int start, int target) {
     // nums有序, 从nums[start:]查找目标，存在则返回目标下标，如果不存在，返回-1
@@ -86,7 +86,7 @@ vector<vector<int>> threeSum(vector<int>& nums) {
     }
     return ans;
 }
-
+// 最优：排序+双指针；每个i作为left, 从left右边找mid, right;
 vector<vector<int>> threeSum2(vector<int>& nums) {
     int n= nums.size();
     vector<vector<int>> ans;
