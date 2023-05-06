@@ -1798,6 +1798,14 @@ int findUnsortedSubarrayOnOn(vector<int>& nums) {
 
 int main()
 {
+    cout<<"测试myVector1"<<endl;
+    myVector1<int> myv1;
+    myv1.print();
+    myv1.push_back(1);
+    myv1.push_back(3);
+    myv1.push_back(2);
+    myv1.print();
+
     cout<<"测试mypartition"<<endl;
     vector<int> nums{4,2,0,3,2,5};
     mypartitionOnO1(nums,3);

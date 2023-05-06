@@ -702,6 +702,193 @@ int countSubstringsOnnO1(string s) {
 // TODO: 思路3：Manacher算法, 对上面5. 最长回文子串的小改动；
 // O(n), O(n);
 
+// 剑指 Offer 05. 替换空格
+// 把s中空格换成"%20"
+// 思路1：构建新的string, O(n), O(n)，击败27%, 44%
+string replaceSpace(string s) {
+    string s_new;
+    for(char c: s) {
+        if(c==' ')
+            s_new+="%20";
+        else
+            s_new+=c;
+    }
+    return s_new;
+}
+// * 思路2：原地, 注意技巧；
+// 击败100%, 45%
+string replaceSpaceOnO1(string s) {
+    // 前向统计空格个数
+    int count=0;
+    for(char c: s) {
+        if(c==' ')
+            count++;
+    }
+    if(count>=0) {
+        // 预留空间
+        int i=s.size()-1;
+        s.resize(s.size()+count*2);
+        // 反向遍历替换
+        int j=s.size()-1;
+        while(i>=0) {
+            if(s[i]==' ') {
+                s[j--]='0';
+                s[j--]='2';
+                s[j--]='%';
+            }
+            else {
+                s[j--]=s[i];
+            }
+
+            --i;
+        }
+        assert(j==-1);
+    }
+    return s;
+}
+
+// 剑指 Offer 58 - II. 左旋转字符串
+// 思路1：O(n), O(k)
+// 击败68%, 29%
+string reverseLeftWords(string s, int k) {
+    // 题目保证k<s.size(), 否则需要取模；
+    string temp = s.substr(0, k);
+    for(int i=0;i+k<s.size();++i) {
+        s[i]=s[i+k];
+    }
+    copy(temp.begin(), temp.end(), s.end()-k);
+    return s;
+}
+// * 思路2：O(2n), O(1), 击败100%, 99%
+string reverseLeftWordsOnO1(string s, int k) {
+    // 题目保证k<s.size(), 否则需要取模；
+    // * 3次旋转
+    reverse(s.begin(), s.end());
+    reverse(s.end()-k, s.end());
+    reverse(s.begin(), s.end()-k);
+    return s;
+}
+
+// 剑指 Offer 20. 表示数值的字符串
+// O(n), O(1), 击败70%, 50%
+bool isFloatOrInt(string &s, int start, int end) {
+    if(start>=end)
+        return false;
+    
+    int j=start;
+    int digitCount=0;
+    // 前导空格
+    while(s[j]==' ') {
+        j++;
+        if(j==end)
+            return false;
+    }
+    // +/-
+    if(s[j]=='+'||s[j]=='-') {
+        j++;
+        if(j==end)
+            return false;
+    }
+    while(j<end) {
+        if(!(isdigit(s[j]) || s[j]=='.')) { // ! 好像中间空格不行; 测试样例：". 1"
+            return false;
+        }
+        else if(isdigit(s[j])) {
+            digitCount++;
+        }
+        
+        j++;
+    }
+    return digitCount>0;
+}
+bool isInt(string &s, int start, int end) {
+    if(start>=end)
+        return false;
+    
+    int j=start;
+    int digitCount=0;
+    // 前导空格
+    while(s[j]==' ') {
+        j++;
+        if(j==end)
+            return false;
+    }
+    // +/-
+    if(s[j]=='+'||s[j]=='-') {
+        j++;
+        if(j==end)
+            return false;
+    }
+    while(j<end) {
+        if(!(isdigit(s[j]) || s[j]==' ')) { // ! 不能有'.'，但可以有' '
+            return false;
+        }
+        else if(isdigit(s[j])) {
+            digitCount++;
+        }
+        
+        j++;
+    }
+    return digitCount>0;
+}
+bool isNumber(string s) {
+    // s非空
+    int digitCount = 0; // ! 反例"."
+    int signCount = 0; // 这个可没有
+    int eCount = 0;
+    int dotCount = 0;
+
+    // 第一次遍历，确定e的位置
+    int i = 0;
+    int ePos = -1;
+    while(i<s.size()) {
+        if(s[i]=='e' || s[i]=='E') {
+            ePos = i;
+            eCount++;
+            if(eCount>1)
+                return false;
+        }
+        else if(s[i]=='.') {
+            dotCount++;
+            if(dotCount>1)
+                return false;
+        }
+        else if(s[i]=='+' || s[i]=='-') {
+            signCount++;
+            if(signCount>2)
+                return false;
+        }
+        else if(isdigit(s[i]) || s[i]==' ') { // ! 可以有空格
+            digitCount++;
+        }
+        else {
+            // 其他字符
+            return false;
+        }
+        i++;
+    }
+    if(digitCount==0)
+        return false;
+    // ! 后置空格可以有，例如"1 "
+    while(!s.empty() && s.back()==' ')
+        s.pop_back();
+
+    if(ePos == -1) {
+        // 无e
+        // 只有一个数，可为小数
+        return isFloatOrInt(s, 0, s.size());
+    }
+    else {
+        // 有e
+        if(ePos == 0 || ePos == s.size()-1)
+            return false;
+        // 第一个数，可为小数
+        // 第二个数, 不能是小数
+        return isFloatOrInt(s, 0, ePos) && isInt(s, ePos+1, s.size());
+    }
+}
+
+
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
     // 常值后缀: u/U表示整型的无符号，ll/LL表示long long；f/F表示float; 由于常量默认是int和double类型，所以这3个就够用了；
@@ -812,6 +999,18 @@ int main() {
     cout<< countSubstringsOnnO1("abc")<<endl;
     cout<< countSubstringsOnnO1("aaa")<<endl;
     cout<< countSubstringsOnnO1("abccba")<<endl;
+
+    cout<<"替换空格"<<endl;
+    cout<< replaceSpaceOnO1("We are happy")<<endl;
+    
+    cout<<"左旋转字符串"<<endl;
+    cout<< reverseLeftWordsOnO1("abcdefg", 2)<<endl;
+
+    cout<<"表示数值的字符串"<<endl;
+    vector<string> numStr = {"+100", "5e2", "-123", "3.1416", "-1E-16", "0123", 
+        "12e", "1a3.14", "1.2.3", "+-5", "12e+5.4", "."}; // 第一行6个是，第二行后6个不是
+    for(string s: numStr)
+        printBool(isNumber(s));
 
     return 0;
 }
