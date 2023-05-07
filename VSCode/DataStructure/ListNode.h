@@ -81,3 +81,37 @@ void deleteList(ListNode *head) {
 		delete del;
 	}
 }
+
+// 剑指 Offer 18. 删除链表的节点
+// 击败87%, 68%
+ListNode* deleteNode(ListNode* head, int val, bool onlyDeleteFirst = false) {
+	// 删除值为val的节点；onlyDeleteFirst = true则只删除从前到后的第一个值为val的节点；
+	// 删除的节点内存需要释放
+	// 返回删除后的链表头指针
+
+	ListNode* headNULL = new ListNode(-1, head);
+	ListNode* prev = headNULL; // head = headNULL->next
+	while(head!=NULL) {
+		// prev -> head -> ...
+		if(head->val == val) {
+			// delete node head
+			// prev -> head -> temp -> ...
+			// to
+			// prev -> temp -> ...
+			ListNode* temp = head ->next;
+			prev -> next = temp;
+			delete head;
+			head = temp;
+			if(onlyDeleteFirst)
+				break;
+		}
+		else {
+			prev = head;
+			head = head->next;
+		}
+	}
+
+	head = headNULL->next;
+	delete headNULL;
+	return head;
+}

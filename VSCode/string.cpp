@@ -888,6 +888,102 @@ bool isNumber(string s) {
     }
 }
 
+// 剑指 Offer 67. 把字符串转换成整数
+// 使用long long存中间结果，击败66%, 91%
+int strToInt(string str) {
+    // 前导空格
+    int i=0;
+    while(i<str.size()&& str[i]==' ') {
+        i++;
+    }
+
+    // 判断第一个字符
+    long long ans = 0;
+    int sign=1;
+    if(i<str.size()) {
+        if(str[i]=='-') {
+            sign = -1;
+            i++;
+        }
+        else if(str[i]=='+') {
+            sign = 1;
+            i++;
+        }
+        else if(!isdigit(str[i])) {
+            // 非数字，
+            return 0;
+        }
+        // else 数字，do nothing
+
+        while(i<str.size() && isdigit(str[i])) {
+            ans = ans * 10 + (str[i]-'0');
+
+            // ! 注意：下面两个判断可带上等号
+            if(sign == 1 && ans > 2147483647LL) {
+                return INT_MAX;
+            }
+            else if(sign == -1 && ans > 2147483648LL) {
+                return INT_MIN;
+            }
+            i++;
+        }
+    }
+    if(sign == 1)
+        return int(ans);
+    else 
+        return int(-ans);
+}
+// 仅使用int; 击败66%, 49%
+int strToInt_onlyINT(string str) {
+    // 前导空格
+    int i=0;
+    while(i<str.size()&& str[i]==' ') {
+        i++;
+    }
+
+    // 判断第一个字符
+    int ans = 0;
+    int sign=1;
+    if(i<str.size()) {
+        if(str[i]=='-') {
+            sign = -1;
+            i++;
+        }
+        else if(str[i]=='+') {
+            sign = 1;
+            i++;
+        }
+        else if(!isdigit(str[i])) {
+            // 非数字，
+            return 0;
+        }
+        // else 数字，do nothing
+
+        while(i<str.size() && isdigit(str[i])) {
+            // ! 仅使用INT, 则下面判断必须用>=，因为int正数不能表示INT_MIN
+            if(sign == 1) {
+                if(ans>214748364 || (ans == 214748364 && (str[i]-'0')>=7)) {
+                    // 等价于ans * 10 + (str[i]-'0') >= 2147483647LL
+                    return INT_MAX;
+                }
+            }
+            else { // sign == -1
+                if(ans>214748364 || (ans == 214748364 && (str[i]-'0')>=8)) {
+                    // 等价于ans * 10 + (str[i]-'0') >= 2147483648LL
+                    return INT_MIN;
+                }
+            }
+
+            ans = ans * 10 + (str[i]-'0');
+            i++;
+        }
+    }
+    if(sign == 1)
+        return ans;
+    else 
+        return -ans;
+}
+
 
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
@@ -1011,6 +1107,13 @@ int main() {
         "12e", "1a3.14", "1.2.3", "+-5", "12e+5.4", "."}; // 第一行6个是，第二行后6个不是
     for(string s: numStr)
         printBool(isNumber(s));
+    
+    cout<<"字符串转数字"<<endl;
+    cout<<strToInt_onlyINT("42")<<endl;
+    cout<<strToInt_onlyINT("  -42")<<endl;
+    cout<<strToInt_onlyINT("42     abc123")<<endl;
+    cout<<strToInt_onlyINT("2147483648")<<endl;
+    cout<<strToInt_onlyINT("-2147483648")<<endl;
 
     return 0;
 }
