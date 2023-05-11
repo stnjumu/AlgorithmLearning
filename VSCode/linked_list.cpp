@@ -569,6 +569,25 @@ Node* copyRandomList(Node* head) {
     return newHead;
 }
 
+// 剑指 Offer 22. 链表中倒数第k个节点
+// 击败100%, 24%
+ListNode* getKthFromEnd(ListNode* head, int k) {
+    // 假设链表节点数n>=k;
+    ListNode* p=head, *pp = head;
+    int count = 0;
+    while(p!=NULL) {
+        if(count<k) {
+            // 先走k步
+            count++;
+            p=p->next;
+        }
+        else {
+            pp = pp->next;
+            p=p->next;
+        }
+    }
+    return pp;
+}
 
 int main()
 {
@@ -645,6 +664,11 @@ int main()
     list1 = deleteNode(list1, 1);
     printList(list1);
     cout<<getListSize(list1)<<endl;
+    deleteList(list1);
+
+    cout<<"链表中倒数第k个节点"<<endl;
+    list1 = vector2List({1,2,3,4,5});
+    cout<< getKthFromEnd(list1, 2)->val<<endl;
     deleteList(list1);
     
     return 0;

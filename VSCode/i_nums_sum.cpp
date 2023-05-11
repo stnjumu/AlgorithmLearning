@@ -7,7 +7,7 @@ using namespace std;
 
 // TODO: 两数之和, 三数之和，最接近的三数之和，四数之和
 
-// 1. 两数之和
+// 1. 两数之和 (无序)
 // 暴力法：O(n^2)
 // 哈希查找：O(n)
 vector<int> twoSum(vector<int>& nums, int target) {
@@ -41,6 +41,29 @@ vector<int> twoSum2(vector<int>& nums, int target) {
     }
     return {};
 }
+
+// 剑指 Offer 57. 和为s的两个数字 (有序)
+// nums升序，返回其中任意一对值n1, n2, n1+n2==s即可；
+// O(n), 击败62%, 29%
+vector<int> twoSum(vector<int>& nums, int target) {
+    // 双指针，题目保证答案存在
+    auto left=nums.begin(), right=nums.end()-1;
+    while(left<right) {
+        if(*left+*right==target) {
+            return {*left, *right};
+        }
+        else if(*left+*right<target) {
+            left++;
+        }
+        else {
+            right--;
+        }
+    }
+    return {-1, -1};
+}
+// ! 可能问题：
+// 1. 题目仅保证nums[i]>0，*left+*right溢出(使用减法)；
+// 1.1 如果没保证nums[i]>0, 则减法也可能溢出，只能使用long long
 
 // 15. 三数之和
 // 暴力法：O(n^3)

@@ -984,6 +984,135 @@ int strToInt_onlyINT(string str) {
         return -ans;
 }
 
+// 剑指 Offer 58 - I. 翻转单词顺序
+// 将一句话中单词顺序翻转，例如：the sky is blue! -> blue! is sky the
+// 使用临时空间存每个单词，O(n), O(n), 击败38%, 40%
+string reverseWords(string s) {
+    char space=' ';
+    vector<string> words;
+    int i=0, n=s.size();
+    while(i<n) {
+        // 前导space
+        while(i<n&&s[i]==space) {
+            i++;
+        }
+        if(i>=n) {
+            break;
+        }
+
+        int start = i;
+        // find end
+        while(i<n&&s[i]!=space) {
+            i++;
+        }
+        words.push_back(s.substr(start, i-start));
+    }
+
+    // 翻转
+    string ans;
+    for(int j=words.size()-1; j>=0; j--) {
+        ans += words[j];
+        if(j!=0) {
+            ans += space;
+        }
+    }
+    return ans;
+}
+// * 优化成O(n), O(1), 击败100%, 98%
+string reverseWordsOnO1(string s) {
+    // 反转整个句子，然后反转每个单词即可；但此方法不适合处理多空格情况，所以空格需要额外处理；
+    // O(n)把多余空格全部去除；
+    const char space = ' ';
+    int left=0, right=0, n=s.size();
+    bool lastIsSpace = false;
+    // 忽略前导空格
+    while(right<n&&s[right]==space)
+        right++;
+    // 之后每个单词后面接一个空格
+    while(right<n) {
+        if(s[right]==space) {
+            if(lastIsSpace) {
+                // 多个空格
+                lastIsSpace=true;
+                right++;
+            }
+            else {
+                // 第一个空格
+                lastIsSpace=true;
+                s[left++]=s[right++];
+            }
+        }
+        else {
+            lastIsSpace=false;
+            s[left++]=s[right++];
+        }
+    }
+    if(left==0)
+        return {};
+    else
+        // 去除s后面多余的空格和其他字符
+        s.resize(left);
+    if(s.back()==space) // 末尾最多一个空格
+        s.pop_back();
+
+    // 反转整个句子
+    reverse(s.begin(), s.end());
+    // 反转每个单词
+    int i=0;
+    n = s.size(); // ! 上面更改了s的size，后面没更新n就用了；
+    while(i<n) {
+        // find 单词的第一个字母位置start
+        while(i<n&&s[i]==space) {
+            i++;
+        }
+        if(i>=n) {
+            // 结束
+            return s;
+        }
+
+        left = i;
+        // find 单词的最后一个字母的后面一个位置end;
+        while(i<n&&s[i]!=space) {
+            i++;
+        }
+        // end = i;
+        reverse(s.begin()+left, s.begin()+i);
+    }
+    return s;
+}
+
+// * 类似：将一句话中每个单词翻转，原语句可能包含额外空格，但翻转后不可包含额外空格；
+// O(n), O(n)
+// TODO: 优化成O(n), O(1)，就是reverseWordsOnO1的后半部分；
+string reverseWordsInSentence(string s) {
+    char space = ' ';
+    int i=0, n= s.size();
+    string ans;
+    while(i<n) {
+        // find 单词的第一个字母位置start
+        while(i<n&&s[i]==space) {
+            i++;
+        }
+        if(i>=n) {
+            // 结束
+            return ans;
+        }
+
+        int start = i;
+        // find 单词的最后一个字母的后面一个位置end;
+        while(i<n&&s[i]!=space) {
+            i++;
+        }
+        // end = i;
+        reverse(s.begin()+start, s.begin()+i);
+
+        if(!ans.empty())
+            ans+=space;
+        ans += s.substr(start, i-start);
+    }
+    return ans;
+}
+// TODO: 上面方法中标点符号算作了单词的一部分，要求标点符号位置不变该如何做？
 
 int main() {
     cout<< "基本类型转string: to_string"<<endl; // c++ 11新方法；
@@ -1114,6 +1243,15 @@ int main() {
     cout<<strToInt_onlyINT("42     abc123")<<endl;
     cout<<strToInt_onlyINT("2147483648")<<endl;
     cout<<strToInt_onlyINT("-2147483648")<<endl;
+
+    cout<<"以单词为单位翻转句子"<<endl;
+    cout<<reverseWordsOnO1("the sky is blue")<<endl;
+    cout<<reverseWordsOnO1("  hello world!   ")<<endl;
+    cout<<reverseWordsOnO1("  hello   the   world!   ")<<endl;
+
+    cout<<"翻转句子中的单词"<<endl;
+    cout<<reverseWordsInSentence("the sky is blue")<<endl;
+    cout<<reverseWordsInSentence("  hello world!")<<endl;
 
     return 0;
 }
