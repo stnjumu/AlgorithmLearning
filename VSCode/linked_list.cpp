@@ -111,7 +111,7 @@ ListNode* reverseListIter(ListNode* head) {
 // ! 25. K个一组翻转链表
 // 思路1：使用双端队列保存k个节点，每凑够k个就反序插入，不够就正序插入；时间O(n), 空间O(k)
 // 思路2：优化成O(1)空间复杂度；双指针，[left, right)凑够k个就头插法反序；
-// 下面是思路2的实现，只需记住[left, right)左开右闭会非常好做，翻转[left, right]的话会比较难做；
+// 头插法 [left, right) 
 ListNode* reverseKGroup(ListNode* head, int k) {
     if(k<=1)
         return head;
@@ -151,6 +151,44 @@ ListNode* reverseKGroup(ListNode* head, int k) {
 
     head = headNull->next;
     delete headNull;
+    return head;
+}
+// 迭代翻转 [left, right] right定义和上面right不太一样，这个更符合直觉；
+ListNode* reverseKGroup2(ListNode* head, int k) {
+    // using null head
+    ListNode *headNULL= new ListNode(-1, head);
+    
+    int i=0;
+    ListNode *leftleft=headNULL, *left=head;
+    ListNode *right=head, *rightright=nullptr;
+    // leftleft->left-> ... -> right->rightright
+    while(right!=nullptr) {
+        i++;
+        rightright = right->next;
+        if(i%k==0) {
+            // reverse [left, right]
+            // reverse_list(leftleft, left, right, rightright); // 可以把下面实现一个函数；
+            ListNode *p = left, *pp=nullptr;
+            while(p!=rightright) {
+                ListNode *temp_next = p->next;
+                p->next = pp;
+                pp = p;
+                p = temp_next;
+            }
+            leftleft->next = right;
+            left->next= rightright;
+
+            // for next it
+            leftleft = left;
+            left = rightright;
+        }
+        
+        // for next it
+        right=rightright;
+    }
+
+    head = headNULL->next;
+    delete headNULL;
     return head;
 }
 
