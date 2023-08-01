@@ -26,6 +26,53 @@ remove: 将指定范围内满足条件的元素都移到尾部；常配合erase�
     remove为std的算法，只会改变容器内部顺序，而不会改变容器大小；
 */
 
+// 字节3面：实现简单的Vector, 可仅支持push_back操作，并分析复杂度
+template<class T>
+class myVector1{
+    T *v; // 动态数组指针
+    int size; // 已有元素个数
+    int capacity; // 最大容量
+public:
+    myVector1(): v(NULL), size(0) {}
+    // 复杂度分析: push_back本身操作每次都有，复杂度恒定为1；
+    // 需要特殊考虑的是size==capacity时的扩容操作，观察发现，如果从空vector push n个数进来
+    // 会在1, 2, 4, 8, ..., 2^i, ..., n (为了简单可假设n刚好是2的幂 n = 2^k)
+    // 计算量1+2+...+2^i +... + n = 1*(2^(logn + 1)-1) / (2-1) = 2n
+    // 等比数列求和公式：a1(q^n-1)/(q-1);
+    // 平摊复杂度O(2), 再加上刚开始去除的1的push操作；
+    // 合计O(3)，即平均每次push_back复杂度为3;
+    void push_back(T n) {
+        if(size == capacity) {
+            T *temp;
+            if(capacity == 0) {
+                temp = new int[1];
+                capacity = 1;
+            }
+            else {
+                temp = new int[capacity*2];
+                capacity = capacity*2;
+                for(int i=0;i<size;++i)
+                    temp[i]=v[i];
+                delete []v;
+            }
+            v = temp;
+        }
+        v[size]=n;
+        size++;
+    }
+
+    // 下面函数仅用于测试；
+    void print() {
+        cout<< "vector: size = "<<size<<", capacity = " << capacity<<endl;
+        if(size>0) {
+            for(int i=0;i<size;++i) {
+                cout<<v[i]<<" ";
+            }
+            cout<<endl;
+        }
+    }
+};
+
 void printBool(bool flag) {
     if(flag)
         cout<<"true"<<endl;

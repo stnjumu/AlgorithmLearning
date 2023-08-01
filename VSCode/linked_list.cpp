@@ -3,6 +3,7 @@
 #include<assert.h>
 #include<algorithm>
 #include"DataStructure/ListNode.h"
+#include"DataStructure/array.h"
 using namespace std;
 
 // 21. 合并两个有序链表
@@ -94,11 +95,13 @@ ListNode* reverseList(ListNode* head) {
 // 迭代版本，两个指针即可；击败93%, 78%
 ListNode* reverseListIter(ListNode* head) {
     ListNode *prev = NULL;
-
     while(head!=NULL) {
-        // ... <- prev -> head -> ...
+        // ... <- prev, head -> ...
+        // =>
+        // ... <- prev <- head, temp -> ...
         ListNode *temp = head->next;
         head->next = prev;
+        // 迭代
         prev = head;
         head = temp;
     }
@@ -108,7 +111,7 @@ ListNode* reverseListIter(ListNode* head) {
 // ! 25. K个一组翻转链表
 // 思路1：使用双端队列保存k个节点，每凑够k个就反序插入，不够就正序插入；时间O(n), 空间O(k)
 // 思路2：优化成O(1)空间复杂度；双指针，[left, right)凑够k个就头插法反序；
-// 下面是思路2的实现，只需记住[left, right)左开右闭会非常好做，翻转[left, right]的话会比较难做；
+// 头插法 [left, right) 
 ListNode* reverseKGroup(ListNode* head, int k) {
     if(k<=1)
         return head;
@@ -148,6 +151,44 @@ ListNode* reverseKGroup(ListNode* head, int k) {
 
     head = headNull->next;
     delete headNull;
+    return head;
+}
+// 迭代翻转 [left, right] right定义和上面right不太一样，这个更符合直觉；
+ListNode* reverseKGroup2(ListNode* head, int k) {
+    // using null head
+    ListNode *headNULL= new ListNode(-1, head);
+    
+    int i=0;
+    ListNode *leftleft=headNULL, *left=head;
+    ListNode *right=head, *rightright=nullptr;
+    // leftleft->left-> ... -> right->rightright
+    while(right!=nullptr) {
+        i++;
+        rightright = right->next;
+        if(i%k==0) {
+            // reverse [left, right]
+            // reverse_list(leftleft, left, right, rightright); // 可以把下面实现一个函数；
+            ListNode *p = left, *pp=nullptr;
+            while(p!=rightright) {
+                ListNode *temp_next = p->next;
+                p->next = pp;
+                pp = p;
+                p = temp_next;
+            }
+            leftleft->next = right;
+            left->next= rightright;
+
+            // for next it
+            leftleft = left;
+            left = rightright;
+        }
+        
+        // for next it
+        right=rightright;
+    }
+
+    head = headNULL->next;
+    delete headNULL;
     return head;
 }
 
@@ -425,6 +466,167 @@ bool isPalindrome(ListNode* head) {
     return true;
 }
 
+// 剑指 Offer 06. 从尾到头打印链表
+// 击败100%, 91%
+vector<int> reversePrint(ListNode* head) {
+    vector<int> ans;
+    while(head!=NULL) {
+        ans.push_back(head->val);
+        head=head->next;
+    }
+    reverse(ans.begin(), ans.end());
+    return ans;
+}
+// 如果可以修改原链表，且不需要返回vector，只反序打印, 则可先翻转链表，再打印；则O(1)空间可行；
+
+// 剑指 Offer 35. 复杂链表的复制
+// 链表额外多一个random指针，完成链表的copy
+
+/*下面代码说明链表节点类不好用继承实现；
+class Node: public ListNode {
+public:
+    // 继承自父类有int val; ListNode *next;
+    Node* random;
+    // 子类调用父类构造函数；
+    Node(int _val): ListNode(_val), random(NULL) {}
+    // ! Node指针不会自动转换为ListNode
+    Node(int _val, Node* _next): ListNode(_val, _next), random(NULL) {}
+    Node(int _val, Node* _next, Node* _random): ListNode(_val, _next), random(_random) {}
+};
+*/
+class Node{
+public:
+    int val; 
+    Node* next;
+    Node* random;
+    Node(int _val): val(_val), next(NULL), random(NULL) {}
+    Node(int _val, Node* _next): val(_val), next(_next),  random(NULL) {}
+    Node(int _val, Node* _next, Node* _random): val(_val), next(_next),  random(_random) {}
+};
+Node* vector2ListOffer35(vector<int> v, vector<int> randomIndex) {
+    // v即每个节点的val, randomIndex[i]表示第i个节点的random指向第randomIndex[i]个节点；
+    assert(randomIndex.size() == v.size());
+	Node *head = NULL, *tail = NULL;
+    vector<Node*> nodes;
+	for (int i = 0; i < v.size(); i++) {
+		if (head == NULL)
+			head = tail = new Node(v[i]);
+		else
+			tail = tail->next = new Node(v[i]);
+        nodes.push_back(tail);
+	}
+
+    // set random;
+    for(int i=0;i<randomIndex.size();i++) {
+        assert(randomIndex[i]< int(nodes.size())); // ! int 和 size_t比较会转换为无符号数，-1会变成很大的数；
+        if(randomIndex[i]==-1)
+            nodes[i]->random=NULL;
+        else
+            nodes[i]->random=nodes[randomIndex[i]];
+    }
+
+	return head;
+}
+void printListOffer35(Node* head, string name = string("list")) {
+	cout << name << " val = ";
+    Node* p = head;
+	while (p!=NULL)
+	{
+		cout << p->val << " ";
+		p = p->next;
+	}
+	cout << endl;
+	cout << "list random" << " = ";
+    while (head!=NULL)
+	{
+        if(head->random == NULL)
+            cout<<"null"<<" ";
+        else
+    		cout << head->random->val << " ";
+		head = head->next;
+	}
+	cout << endl;
+}
+void deleteListOffer35(Node *head) {
+	Node *del = head;
+	while (head!=NULL)
+	{
+		del = head;
+		head = head->next;
+		delete del;
+	}
+}
+// 原地，不使用额外空间；
+// 击败97%, 93%
+Node* copyRandomList(Node* head) {
+    // ... -> nodei -> ...
+    // to
+    // ... -> nodei -> nodei' -> ...
+    Node *p =head;
+    while(p != NULL) {
+        Node *temp = new Node(p->val, p->next);
+        // insert temp to p->next
+        p->next = temp;
+
+        // 迭代
+        p = temp -> next;
+    }
+
+    // set new node's random
+    p = head;
+    Node *pp;
+    while(p!=NULL) {
+        pp = p->next;
+        assert(pp!=NULL);
+        // ... -> p -> pp -> ...
+        // pp is copy of p
+        // if p->random == NULL, pp->random = NULL
+        // else pp->random = p->random->next;
+        pp->random = p->random == NULL ? NULL : p->random->next;
+
+        p = pp->next;
+    }
+
+    // split two list
+    Node *newHead=NULL, *newTail=NULL;
+    p = head;
+    while(p!=NULL) {
+        if(newTail==NULL) {
+            newTail=newHead = p->next;
+        }
+        else {
+            newTail=newTail->next= p->next;
+        }
+
+        // ... -> p -> newTail -> ...
+        p -> next = p->next->next;
+        p = p->next;
+    }
+    // 可确定newTail->next被设置为NULL;
+
+    return newHead;
+}
+
+// 剑指 Offer 22. 链表中倒数第k个节点
+// 击败100%, 24%
+ListNode* getKthFromEnd(ListNode* head, int k) {
+    // 假设链表节点数n>=k;
+    ListNode* p=head, *pp = head;
+    int count = 0;
+    while(p!=NULL) {
+        if(count<k) {
+            // 先走k步
+            count++;
+            p=p->next;
+        }
+        else {
+            pp = pp->next;
+            p=p->next;
+        }
+    }
+    return pp;
+}
+
 int main()
 {
     cout<<"合并两个有序链表"<<endl;
@@ -479,6 +681,33 @@ int main()
     printList(list1);
     deleteList(list1);
 
+    cout<<"从尾到头打印链表"<<endl;
+    list1 = vector2List({1,2,3,4});
+    printList(list1);
+    printVector(reversePrint(list1));
+    deleteList(list1);
 
+    cout<< "复杂链表的复制"<<endl;
+    Node* randomList = vector2ListOffer35({7, 13,11, 10,1}, {-1,0,4,2,0});
+    printListOffer35(randomList);
+    Node* randomListCopy = copyRandomList(randomList);
+    deleteListOffer35(randomList);
+    printListOffer35(randomListCopy, "copy list");
+    deleteListOffer35(randomListCopy);
+
+    cout<<"删除链表的节点"<<endl;
+    list1 = vector2List({1,2,3,4,1,6,7,8,1});
+    printList(list1);
+    cout<<getListSize(list1)<<endl;
+    list1 = deleteNode(list1, 1);
+    printList(list1);
+    cout<<getListSize(list1)<<endl;
+    deleteList(list1);
+
+    cout<<"链表中倒数第k个节点"<<endl;
+    list1 = vector2List({1,2,3,4,5});
+    cout<< getKthFromEnd(list1, 2)->val<<endl;
+    deleteList(list1);
+    
     return 0;
 }

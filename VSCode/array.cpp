@@ -225,7 +225,7 @@ vector<int> spiralOrder(vector<vector<int>>& matrix) {
     }
     return ans;
 }
-// copied from 参考答案；
+// ! copied from 参考答案；
 vector<int> spiralOrder2(vector<vector<int>>& matrix) {
 
         if (matrix.empty()) return {};
@@ -308,7 +308,83 @@ vector<int> spiralOrder3(vector<vector<int>>& matrix) {
     }
     return ans;
 }
-// TODO: 推荐面试时写最简单的方法；使用direction4, 且使用next_x, next_y， 并且使用flag;
+// TODO: 推荐面试时写最简单的方法；使用direction4, 且使用next_x, next_y， 并且使用flag的方法过于复杂，面试官有要求的时候再写；
+// 容易理解方法：
+// 例如：
+// 1 2 3
+// 4 5 6
+// 7 8 9
+// 1圈都会分成4段，对应4个方向，显然有两种分发：3221和2222，即1->3, 6->9, 8->7, 4四段和1->2, 3->6, 9->8, 7->4四段；
+// 其中2222比较容易理解，但实现上需要注意1*1, n*1, 1*n的特殊情况，如下;
+// ! 而3221比较难理解，但代码却很容易写，见上面的参考答案；此方法可理解为实时收缩边界法，有l, r, t, b四个边界，遍历完第一行就把t++，并判断是否越界，是则结束，否则继续，这种方法不需考虑边界情况；
+// 击败100%, 20%
+vector<int> spiralOrder4(vector<vector<int>>& matrix) {
+    int m = matrix.size();
+    if(m==0) return {};
+    int n = matrix[0].size();
+    if(n==0) return {};
+
+    vector<int> ret;
+    // 1->1; 2->1; 3->2; 4->2;
+    int max_roll = (min(m, n)+1)/ 2;
+    int i_roll=0;
+    while(i_roll<max_roll) {
+        int lt_x = i_roll, lt_y = i_roll;
+        int rt_x = i_roll, rt_y = n - i_roll - 1;
+        int lb_x = m - i_roll - 1, lb_y = i_roll;
+        int rb_x = m - i_roll - 1, rb_y = n - i_roll - 1;
+        // TODO: 以上8个值在下面只用到4个，可优化成4个不重复的值，即l,r,b,t;
+
+        int running_x = lt_x, running_y = lt_y;
+
+        // 特殊情况
+        if(lt_x == lb_x && lt_y == rt_y) {
+            // 1*1
+            ret.push_back(matrix[running_x][running_y]);
+            break; // end
+        }
+        if(lt_x == lb_x) {
+            // 1*n, [lt, rt]
+            while(running_y<=rt_y) {
+                ret.push_back(matrix[running_x][running_y]);
+                running_y++;
+            }
+            break; // end
+        }
+        if(lt_y == rt_y) {
+            // n*1, [lt, lb]
+            while(running_x<=lb_x) {            
+                ret.push_back(matrix[running_x][running_y]);
+                running_x++;
+            }
+            break; // end
+        }
+
+        // [lt, rt)
+        while(running_y<rt_y) {
+            ret.push_back(matrix[running_x][running_y]);
+            running_y++;
+        }
+        // [rt, rb)
+        while(running_x<rb_x) {            
+            ret.push_back(matrix[running_x][running_y]);
+            running_x++;
+        }
+        // [rb, lb)
+        while(running_y>lb_y) {
+            ret.push_back(matrix[running_x][running_y]);
+            running_y--;
+        }
+        // [lb, lt)
+        while(running_x>lt_x) {
+            ret.push_back(matrix[running_x][running_y]);
+            running_x--;
+        }
+
+        i_roll++;
+    }
+    return ret;
+}
 
 // 剑指 Offer 60. n个骰子的点数
 // dp[n, i]表示n个骰子的第i个点数的概率；
@@ -1798,6 +1874,14 @@ int findUnsortedSubarrayOnOn(vector<int>& nums) {
 
 int main()
 {
+    cout<<"测试myVector1"<<endl;
+    myVector1<int> myv1;
+    myv1.print();
+    myv1.push_back(1);
+    myv1.push_back(3);
+    myv1.push_back(2);
+    myv1.print();
+
     cout<<"测试mypartition"<<endl;
     vector<int> nums{4,2,0,3,2,5};
     mypartitionOnO1(nums,3);

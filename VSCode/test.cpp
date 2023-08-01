@@ -30,6 +30,11 @@ int main()
         cout<<n<<" ";
     cout<<endl;
 
+    vector<int> v1;
+    cout<< v1.size() <<" "<< v1.capacity()<<endl;
+    v1.reserve(100);
+    cout<< v1.size() <<" "<< v1.capacity()<<endl;
+
     const int a = 10;
     const int *p = &a;
     int *q;
