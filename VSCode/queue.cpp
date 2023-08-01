@@ -20,6 +20,29 @@ vector<int> maxSlidingWindow(vector<int>& nums, int k) {
     return ans;
 }
 
+vector<int> useQueueRemoveRepeat(vector<int>& nums, int k) {
+    vector<int> ret;
+    // nums只能遍历一遍；不可回溯；
+    queue<int> nums_before;
+    // queue<pair<int, int>> text;
+    // text.emplace(1, 2);
+    for(auto n: nums) {
+        int size_nb= nums_before.size();
+        bool find = false;
+        for(int i=0;i<size_nb;i++) {
+            if(n==nums_before.front()) find=true;
+            nums_before.push(nums_before.front());
+            nums_before.pop();
+        }
+        if(!find) {
+            ret.push_back(n);
+            nums_before.push(n);
+            if(nums_before.size()>k) nums_before.pop();
+        }
+    }
+    return ret;
+}
+
 int main()
 {
     cout<<"最大队列With Bug"<<endl;
@@ -53,6 +76,12 @@ int main()
     cout<<"滑动窗口最大值"<<endl;
     vector<int> nums{1,3,-1,-3,5,3,6,7};
     printVector(maxSlidingWindow(nums, 3));
+
+    cout<<"遍历队列去除窗口内重复元素"<<endl;
+    nums.assign({1,2,3,4,5,3,4,5,7,7,7,7,1});
+    printVector(nums);
+    printVector(useQueueRemoveRepeat(nums,3));
+    printVector(useQueueRemoveRepeat(nums,2));
     
     return 0;
 }
